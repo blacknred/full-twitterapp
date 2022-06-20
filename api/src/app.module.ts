@@ -25,6 +25,7 @@ import { TweetsModule } from './tweets/tweets.module';
         REDIS_URL: Joi.string().required(),
         SECRET: Joi.string().required(),
         DB_URL: Joi.string().required(),
+        SMTP_URL: Joi.string().required(),
         // QUEUE_URL: Joi.string().required()
       }),
     }),

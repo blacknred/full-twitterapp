@@ -42,3 +42,8 @@ Simple Twitter like app
    make prod-build
    make prod
    ```
+
+<!-- Extras -->
+scheduled tweets => Rabbitmq, rabbitmq_delayed_message_exchange
+redis pubsub case?
+feeds/notifications => redis queue(brpop list)

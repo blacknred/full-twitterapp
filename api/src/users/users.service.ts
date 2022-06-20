@@ -10,7 +10,7 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { GetWorkspacesDto } from './dto/get-workspaces.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { Workspace } from './entities/user.entity';
-import { BaseRole, Privilege } from './types/user.type';
+import { BaseRole, Privilege } from './interfaces/user.interface';
 
 @Injectable()
 export class WorkspacesService {

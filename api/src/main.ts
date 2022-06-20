@@ -1,14 +1,21 @@
+import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { urlencoded, json } from 'express';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { API_PREFIX } from './__shared__/consts';
+import { AllExceptionFilter } from './__shared__/filters/all-exception.filter';
+import { ValidationPipe } from './__shared__/pipes/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   app.setGlobalPrefix(API_PREFIX);
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalFilters(new AllExceptionFilter());
 
   app.enableCors({
     origin: configService.get('CLIENT_ORIGIN'),

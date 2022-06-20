@@ -8,7 +8,6 @@ import { join } from 'path';
 
 import { databaseProvider } from './__shared__/providers/database.provider';
 import { redisProvider } from './__shared__/providers/redis.provider';
-
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';

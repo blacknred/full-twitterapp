@@ -1,4 +1,4 @@
-export type User = {
+export interface IUser {
   id: number;
   username: string;
   name: string;
@@ -12,4 +12,4 @@ export type User = {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
-};
+}

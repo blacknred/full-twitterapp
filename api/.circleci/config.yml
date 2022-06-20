@@ -1,0 +1,19 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.7.0
+  heroku: circleci/heroku@1.2.6
+workflows:
+  build-test-deploy:
+    jobs:
+      - node/test:
+          pkg-manager: yarn
+      - heroku/deploy-via-git:
+          requires:
+             - node/test
+          filters:
+            branches:
+              only: master
+          # post-steps:
+          #   - run: your-database-migration-command
+          # pre-steps:
+          #   - run: command-that-run-before-deploying

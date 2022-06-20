@@ -10,5 +10,5 @@ export interface IResponse<T = unknown> {
   errors?: ValidationErrorDto[];
   data?: T;
   meta?: Record<string, unknown>;
-  // message?: string;
+  message?: string;
 }

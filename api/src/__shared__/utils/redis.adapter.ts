@@ -1,6 +1,7 @@
-import { ClientOpts, RedisClient, RetryStrategyOptions } from 'redis';
-import { promisify } from 'util';
+import type { ClientOpts, RetryStrategyOptions } from 'redis';
+import { RedisClient } from 'redis';
 import { parse } from 'url';
+import { promisify } from 'util';
 
 /** Redis instance */
 

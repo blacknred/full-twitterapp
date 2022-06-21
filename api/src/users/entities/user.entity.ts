@@ -11,25 +11,26 @@ export class User extends BaseEntity {
   @Property({ length: 100 })
   name!: string;
 
+  @Property({ unique: true })
+  email: string;
+
   @Property({ nullable: true })
   bio?: string;
 
-  @Property({ unique: true })
-  email: string;
+  @Property({ nullable: true })
+  img?: string;
 
   @Exclude()
   @Property()
   password: string;
 
-  @Property({ nullable: true })
-  img?: string;
-
+  @Exclude()
   @Property({ nullable: true })
   rating: number;
 
   @Exclude()
   @Property({ nullable: true })
-  deletedAt?: string;
+  deletedAt?: Date;
 
   @BeforeCreate()
   async hashPassword() {

@@ -22,7 +22,7 @@ export class PaginatedDataDto<T> {
 
 export class BaseResponseDto<T = unknown> {
   @ApiProperty({ type: HttpStatus, example: 200 })
-  status: HttpStatus;
+  statusCode: HttpStatus;
 
   @ApiProperty({
     type: ValidationErrorDto,

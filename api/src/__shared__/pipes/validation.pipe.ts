@@ -1,8 +1,7 @@
 import type { ArgumentMetadata, ValidationPipeOptions } from '@nestjs/common';
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
+  UnprocessableEntityException,
   ValidationPipe as VP,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
@@ -22,13 +21,9 @@ export class ValidationPipe extends VP {
     if (errors.length) {
       this.errs = [];
       this.formateErrors(errors);
-      throw new HttpException(
-        {
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: this.errs,
-        },
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+      throw new UnprocessableEntityException({
+        errors: this.errs,
+      });
     }
 
     return value;

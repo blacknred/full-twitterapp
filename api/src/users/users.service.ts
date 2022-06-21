@@ -1,15 +1,21 @@
 import { EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  PreconditionFailedException,
+} from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { Agent } from 'src/agents/entities/agent.entity';
 import { IAgent } from 'src/agents/interfaces/agent.interface';
 import { Task } from 'src/tasks/entities/task.entity';
-import { ResponseDto } from 'src/__shared__/dto/response.dto';
+import { BaseResponseDto } from 'src/__shared__/dto/response.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { GetWorkspacesDto } from './dto/get-workspaces.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { Workspace } from './entities/user.entity';
+import { User, Workspace } from './entities/user.entity';
 import { BaseRole, Privilege } from './interfaces/user.interface';
 
 @Injectable()
@@ -18,7 +24,7 @@ export class WorkspacesService {
 
   constructor(
     @InjectRepository(Workspace)
-    private workspaceRepository: EntityRepository<Workspace>,
+    private userRepository: EntityRepository<User>,
     @InjectRepository(Agent)
     private agentRepository: EntityRepository<Agent>,
     @InjectRepository(Task)
@@ -102,19 +108,16 @@ export class WorkspacesService {
     };
   }
 
-  async findOne(id: string, agent?: IAgent, withDeleted?: boolean) {
+  async findOne(id: number, withDeleted?: boolean) {
     const params = withDeleted ? id : { id, deletedAt: null };
-    const data = await this.workspaceRepository.findOne(params);
+    const data = await this.userRepository.findOne(params);
 
     if (!data) {
       return {
-        status: HttpStatus.NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
         data: null,
       };
     }
-
-    delete agent?.workspace;
-    data.agent = agent;
 
     return {
       status: HttpStatus.OK,
@@ -122,145 +125,99 @@ export class WorkspacesService {
     };
   }
 
-  async update(updateWorkspaceDto: UpdateWorkspaceDto, agent: IAgent) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     try {
-      const { id, stages, labels, roles, ...rest } = updateWorkspaceDto;
       const res = await this.findOne(id);
-      if (!res.data) return res as ResponseDto;
+      if (!res.data) return res;
 
-      // creator | EDIT_WORKSPACE
-      if (
-        res.data.creatorId !== agent.userId &&
-        !agent.hasPrivilege(Privilege.EDIT_WORKSPACE)
-      ) {
-        return {
-          status: HttpStatus.FORBIDDEN,
-          data: null,
-        };
-      }
+      const { username, email } = updateUserDto;
 
-      // stages
-      if (stages) {
-        for (const stage of res.data.stages) {
-          if (!stages.includes(stage)) {
-            const inUse = await this.taskRepository.count({ stage });
-            if (inUse)
-              return {
-                status: HttpStatus.UNPROCESSABLE_ENTITY,
-                errors: [
-                  {
-                    field: 'stages',
-                    message: `Stage ${stage} in use`,
-                  },
-                ],
-              };
-          }
+      // unique case: username
+      if (username) {
+        if (await this.userRepository.findOne({ username })) {
+          re          ку
+
+          return {
+            statusCode: HttpStatus.CONFLICT,
+            errors: [
+              { field: 'username', message: 'Username allready in use' },
+            ],
+          };
         }
       }
 
-      // labels
-      if (labels) {
-        for (const label of res.data.labels) {
-          if (!labels.includes(label)) {
-            const inUse = await this.taskRepository.count({ label });
-            if (inUse)
-              return {
-                status: HttpStatus.UNPROCESSABLE_ENTITY,
-                errors: [
-                  {
-                    field: 'labels',
-                    message: `Label ${label} in use`,
-                  },
-                ],
-              };
-          }
+      // unique case: email
+      if (email) {
+        if (await this.userRepository.findOne({ email })) {
+          return {
+            statusCode: HttpStatus.CONFLICT,
+            errors: [{ field: 'email', message: 'Email allready in use' }],
+          };
         }
       }
 
-      // roles
-      if (roles) {
-        for (const { name: role } of res.data.roles) {
-          if (roles.every((r) => r.name !== role)) {
-            const inUse = await this.agentRepository.count({ role });
-            if (inUse)
-              return {
-                status: HttpStatus.UNPROCESSABLE_ENTITY,
-                errors: [
-                  {
-                    field: 'roles',
-                    message: `Role ${role} in use`,
-                  },
-                ],
-              };
-          }
-        }
+      // password case
+      if (updateUserDto.password) {
+        res.data.password = updateUserDto.password;
+        await res.data.hashPassword();
       }
 
-      this.workspaceRepository.assign(res.data, rest);
-      await this.workspaceRepository.flush();
+      this.userRepository.assign(res.data, updateUserDto);
+      await this.userRepository.flush();
 
       return {
         status: HttpStatus.OK,
         data: res.data,
       };
     } catch (e) {
-      throw new RpcException({
-        status: HttpStatus.PRECONDITION_FAILED,
-      });
+      throw new PreconditionFailedException();
     }
   }
 
-  async remove(id: string, userId: number) {
+  async remove(id: number) {
     try {
       const res = await this.findOne(id);
-      if (!res.data) return res as ResponseDto;
-
-      // creator
-      if (res.data.creatorId !== userId) {
-        return {
-          status: HttpStatus.FORBIDDEN,
-          data: null,
-        };
-      }
+      if (!res.data) return res;
 
       res.data.deletedAt = new Date();
-      await this.workspaceRepository.flush();
+      await this.userRepository.flush();
+
+      // TODO: use scheduler to run PG procedure to completely delete users and
+      // related entries that not active during the time threshold e.g. 3 months
 
       return {
         status: HttpStatus.OK,
         data: null,
       };
     } catch (e) {
-      throw new RpcException({
-        status: HttpStatus.PRECONDITION_FAILED,
-      });
+      throw new PreconditionFailedException();
     }
   }
 
-  async restore(id: string, userId: number) {
-    try {
-      const res = await this.findOne(id, null, true);
-      if (!res.data) return res as ResponseDto;
+  // async restore(id: string, userId: number) {
+  //   try {
+  //     const res = await this.findOne(id, null, true);
+  //     if (!res.data) return res as ResponseDto;
 
-      // creator
-      if (res.data.creatorId !== userId) {
-        return {
-          status: HttpStatus.FORBIDDEN,
-          data: null,
-        };
-      }
+  //     // creator
+  //     if (res.data.creatorId !== userId) {
+  //       return {
+  //         status: HttpStatus.FORBIDDEN,
+  //         data: null,
+  //       };
+  //     }
 
-      res.data.deletedAt = null;
-      await this.workspaceRepository.flush();
+  //     res.data.deletedAt = null;
+  //     await this.workspaceRepository.flush();
 
-      return {
-        status: HttpStatus.OK,
-        data: res.data,
-      };
-    } catch (e) {
-      throw new RpcException({
-        status: HttpStatus.PRECONDITION_FAILED,
-      });
-    }
-  }
+  //     return {
+  //       status: HttpStatus.OK,
+  //       data: res.data,
+  //     };
+  //   } catch (e) {
+  //     throw new RpcException({
+  //       status: HttpStatus.PRECONDITION_FAILED,
+  //     });
+  //   }
+  // }
 }

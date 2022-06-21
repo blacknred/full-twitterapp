@@ -1,7 +1,7 @@
-import { BeforeCreate, Entity, Property } from '@mikro-orm/core';
+import { BeforeCreate, Entity, Index, Property } from '@mikro-orm/core';
 import * as bcrypt from 'bcryptjs';
 import { Exclude } from 'class-transformer';
-import { BaseEntity } from 'src/__shared__/entities/base.entity';
+import { BaseEntity } from '../../__shared__/entities/base.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -21,15 +21,17 @@ export class User extends BaseEntity {
   img?: string;
 
   @Exclude()
-  @Property()
+  @Property({ hidden: true })
   password: string;
 
   @Exclude()
-  @Property({ nullable: true })
+  @Index()
+  @Property({ nullable: true, hidden: true })
   rating: number;
 
   @Exclude()
-  @Property({ nullable: true })
+  @Index()
+  @Property({ nullable: true, hidden: true, type: 'timestamptz' })
   deletedAt?: Date;
 
   @BeforeCreate()

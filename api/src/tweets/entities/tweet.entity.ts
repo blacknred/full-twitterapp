@@ -14,28 +14,20 @@ export class Tweet extends BaseEntity {
   @Property({ type: ArrayType, default: [] })
   hashes: string[] = [];
 
-  @Property()
-  @Index()
-  authorId: number;
-
-  @Property()
-  @Index()
-  originId: number;
-
   @Exclude()
   @Index()
-  @Property({ nullable: true })
+  @Property({ nullable: true, hidden: true, type: 'timestamptz' })
   deletedAt?: Date;
 
   static isSearchable(column: string) {
     return ['createdAt', 'hashes', 'authorId', 'originId'].includes(column);
   }
 
-  @ManyToOne()(() => User, 'id')
+  @ManyToOne()
   @Index()
   author: User;
 
-  @ManyToOne(() => Tweet, { nullable: true })
+  @ManyToOne({ nullable: true })
   @Index()
   origin?: Tweet;
 }

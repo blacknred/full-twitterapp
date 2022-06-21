@@ -1,7 +1,7 @@
 import { Index, Property, PrimaryKey } from '@mikro-orm/core';
 import { Exclude } from 'class-transformer';
 
-export abstract class BaseEntity<T = unknown> {
+export abstract class BaseEntity<T = Record<string, unknown>> {
   @PrimaryKey()
   id: number;
 
@@ -10,7 +10,7 @@ export abstract class BaseEntity<T = unknown> {
   createdAt = new Date();
 
   @Exclude()
-  @Property({ onUpdate: () => new Date() })
+  @Property({ onUpdate: () => new Date(), hidden: true })
   updatedAt = new Date();
 
   constructor(partial?: T) {

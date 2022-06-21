@@ -6,6 +6,7 @@ export const databaseProvider: MikroOrmModuleAsyncOptions = {
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => ({
     autoLoadEntities: true,
+    flushMode: 'COMMIT',
     clientUrl: configService.get('DB_URL'),
     debug: configService.get('NODE_ENV') === 'development',
     type: 'postgresql',

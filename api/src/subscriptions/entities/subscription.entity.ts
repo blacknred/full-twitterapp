@@ -1,24 +1,18 @@
-import { Entity, ManyToOne, Property, Index } from '@mikro-orm/core';
+import { Entity, Index, ManyToOne } from '@mikro-orm/core';
 import { User } from 'src/users/entities/user.entity';
 import { BaseEntity } from 'src/__shared__/entities/base.entity';
 
 @Entity()
 export class Subscription extends BaseEntity {
-  @Property()
-  userId: number;
-
-  @Property()
-  subUserId: number;
-
   static isSearchable(column: string) {
     return ['createdAt', 'userId', 'subUserId'].includes(column);
   }
 
-  @ManyToOne(() => User, 'id')
+  @ManyToOne()
   @Index()
   user: User;
 
-  @ManyToOne(() => User, 'id')
+  @ManyToOne()
   @Index()
   subUser: User;
 }

@@ -137,6 +137,7 @@ export class UsersService {
 
     // TODO: use scheduler to run PG procedure to completely delete users and
     // related entries that not active during the time threshold e.g. 3 months
+    // SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
 
     return { data: null };
   }

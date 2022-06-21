@@ -14,7 +14,7 @@ export class AllExceptionFilter<T> implements ExceptionFilter<T> {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let payload: IResponse<T> = { status };
+    let payload: IResponse<T> = {};
 
     if (exception instanceof TimeoutError) {
       status = HttpStatus.REQUEST_TIMEOUT;

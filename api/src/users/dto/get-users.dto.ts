@@ -1,19 +1,21 @@
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
+import { IsIn } from 'class-validator';
 import {
-  ApiProperty,
-  IntersectionType,
-  PartialType,
-  PickType,
-} from '@nestjs/swagger';
-import { PaginationDto } from 'src/__shared__/dto/request.dto';
-import { CreateUserDto } from './create-user.dto';
+  KeysetPaginationDto,
+  SortingDto,
+} from '../../__shared__/dto/request.dto';
+
+class UsersSortingDto extends SortingDto {
+  @IsIn(['username', 'name', 'email', 'createdAt'], {
+    message: 'Must be a one of fields of the User entity',
+  })
+  'sort.field': 'username' | 'name' | 'email' | 'createdAt';
+}
 
 export class GetUsersDto extends IntersectionType(
-  PartialType(PickType(CreateUserDto, ['name'] as const)),
-  PaginationDto,
+  KeysetPaginationDto,
+  UsersSortingDto,
 ) {
-  @ApiProperty({ example: 'test@email.com', required: false })
-  email?: string;
-
   @ApiProperty({ example: new Date().toDateString(), required: false })
   createdAt?: string;
 }

@@ -1,8 +1,7 @@
 import { Index, Property, SerializedPrimaryKey } from '@mikro-orm/core';
-import { Expose } from 'class-transformer';
+import { Exclude } from 'class-transformer';
 
-export abstract class BaseEntity {
-  @Expose()
+export abstract class BaseEntity<T = unknown> {
   @SerializedPrimaryKey()
   id!: number;
 
@@ -10,10 +9,11 @@ export abstract class BaseEntity {
   @Property({ onCreate: () => new Date() })
   createdAt = new Date();
 
+  @Exclude()
   @Property({ onUpdate: () => new Date() })
   updatedAt = new Date();
 
-  constructor(partial?: unknown) {
+  constructor(partial?: T) {
     Object.assign(this, partial);
   }
 }

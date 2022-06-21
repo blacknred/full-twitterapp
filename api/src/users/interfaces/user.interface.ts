@@ -5,11 +5,11 @@ export interface IUser {
   bio?: string;
   //
   img?: string;
-  email: string;
+  // email: string;
   // password: string;
-  rating: number;
+  // rating: number;
   //
   createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
+  // updatedAt: string;
+  // deletedAt?: string;
 }

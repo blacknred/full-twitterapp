@@ -1,5 +1,5 @@
-import { HttpStatus } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
+import { IResponse } from '../interfaces/response.interface';
 
 export class ValidationErrorDto {
   @ApiProperty({ type: 'string', example: 'email' })
@@ -20,10 +20,7 @@ export class PaginatedDataDto<T> {
   items: T[];
 }
 
-export class BaseResponseDto<T = unknown> {
-  @ApiProperty({ type: HttpStatus, example: 200 })
-  statusCode: HttpStatus;
-
+export class BaseResponseDto<T = unknown> implements IResponse {
   @ApiProperty({
     type: ValidationErrorDto,
     isArray: true,
@@ -31,12 +28,17 @@ export class BaseResponseDto<T = unknown> {
   })
   errors?: ValidationErrorDto[];
 
-  @ApiProperty({ example: null, required: false })
+  @ApiProperty({ required: false })
   data?: T;
+
+  @ApiProperty({ type: 'string', required: false })
+  message?: string;
 }
 
 export class EmptyResponseDto extends BaseResponseDto<null> {
   data: null;
 }
 
-// export class PaginatedResponseDto<T> extends BaseResponseDto<Paginated<T>> {}
+export class PaginatedResponseDto<T> extends BaseResponseDto<
+  PaginatedDataDto<T>
+> {}

@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ResponseDto } from 'src/__shared__/dto/response.dto';
+import { BaseResponseDto } from 'src/__shared__/dto/response.dto';
 import { IUser } from '../interfaces/user.interface';
 
 export const userMock: IUser = {
   id: 1,
-  name: 'testuser',
-  email: 'test@email.com',
-  isAdmin: false,
+  username: 'testuser',
+  name: 'testname testsecondname',
+  img: 'testavatarurl',
+  bio: 'testuser info',
   createdAt: new Date().toDateString(),
-  updatedAt: new Date().toDateString(),
 };
 
-export class UserResponseDto extends ResponseDto<IUser> {
-  @ApiProperty({ example: userMock })
+export class UserResponseDto extends BaseResponseDto<IUser> {
+  @ApiProperty({ example: userMock, required: false })
   data?: IUser;
 }

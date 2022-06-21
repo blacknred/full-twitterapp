@@ -10,14 +10,12 @@ export class SortingDto {
 
   @ApiProperty({
     type: 'string',
-    required: false,
     example: 'DESC',
     enum: ['ASC', 'DESC'],
   })
-  @IsOptional()
   @Type(() => String)
   @IsIn(['ASC', 'DESC'], { message: 'Must be an ASC or DESC' })
-  'sort.order'?: 'ASC' | 'DESC';
+  'sort.order': 'ASC' | 'DESC';
 }
 
 export class KeysetPaginationDto {

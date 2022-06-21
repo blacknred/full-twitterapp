@@ -32,38 +32,30 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    try {
-      // unique case: username
-      const { username, email } = createUserDto;
+    // unique case: username
+    const { username, email } = createUserDto;
 
-      if (username) {
-        if (await this.userRepository.findOne({ username })) {
-          throw new ConflictException({
-            errors: [
-              { field: 'username', message: 'Username allready in use' },
-            ],
-          });
-        }
+    if (username) {
+      if (await this.userRepository.findOne({ username })) {
+        throw new ConflictException({
+          errors: [{ field: 'username', message: 'Username allready in use' }],
+        });
       }
-
-      // unique case: email
-      if (email) {
-        if (await this.userRepository.findOne({ email })) {
-          throw new ConflictException({
-            errors: [{ field: 'email', message: 'Email allready in use' }],
-          });
-        }
-      }
-
-      const user = new User(createUserDto);
-      await this.userRepository.flush();
-
-      return { data: user };
-    } catch (e) {
-      this.logger.error(e);
-
-      throw new PreconditionFailedException();
     }
+
+    // unique case: email
+    if (email) {
+      if (await this.userRepository.findOne({ email })) {
+        throw new ConflictException({
+          errors: [{ field: 'email', message: 'Email allready in use' }],
+        });
+      }
+    }
+
+    const user = new User(createUserDto);
+    await this.userRepository.persistAndFlush(user);
+
+    return { data: user };
   }
 
   async findAll({ limit, cursor, ...rest }: GetUsersDto) {
@@ -132,7 +124,7 @@ export class UsersService {
     }
 
     this.userRepository.assign(res.data, updateUserDto);
-    await this.userRepository.flush();
+    await this.userRepository.persistAndFlush(res.data);
 
     return { data: res.data };
   }
@@ -141,7 +133,7 @@ export class UsersService {
     const res = await this.findOne(id);
 
     res.data.deletedAt = new Date();
-    await this.userRepository.flush();
+    await this.userRepository.persistAndFlush(res.data);
 
     // TODO: use scheduler to run PG procedure to completely delete users and
     // related entries that not active during the time threshold e.g. 3 months

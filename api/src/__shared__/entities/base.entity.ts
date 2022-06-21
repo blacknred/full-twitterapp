@@ -1,9 +1,9 @@
-import { Index, Property, SerializedPrimaryKey } from '@mikro-orm/core';
+import { Index, Property, PrimaryKey } from '@mikro-orm/core';
 import { Exclude } from 'class-transformer';
 
 export abstract class BaseEntity<T = unknown> {
-  @SerializedPrimaryKey()
-  id!: number;
+  @PrimaryKey()
+  id: number;
 
   @Index()
   @Property({ onCreate: () => new Date() })

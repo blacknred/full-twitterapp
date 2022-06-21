@@ -38,10 +38,6 @@ export class User extends BaseEntity {
   }
 
   static isSearchable(column: string) {
-    return ['name', 'creatorId', 'createdAt'].includes(column);
-  }
-
-  static isNotSecured(column: string) {
-    return ['id', 'name', 'image'].includes(column);
+    return ['createdAt'].includes(column);
   }
 }

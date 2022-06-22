@@ -5,11 +5,9 @@ export const smtpProvider = {
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => ({
+    debug: configService.get('NODE_ENV') === 'development',
     transport: configService.get('SMTP_URL'),
-    defaults: {
-      from: EMAIL_FROM,
-    },
+    defaults: { from: EMAIL_FROM },
     logger: true,
-    debug: false,
   }),
 };

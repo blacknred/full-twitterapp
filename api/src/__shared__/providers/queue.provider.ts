@@ -1,16 +1,20 @@
-// import { ConfigService } from '@nestjs/config';
-// import { ClientProxyFactory, Transport} from '@nestjs/microservices';
-// import { QUEUE_SERVICE } from '../consts';
+import { ConfigService } from '@nestjs/config';
+import type { AmqpAsyncOptionsInterface } from 'nestjs-amqp';
 
-// export const queueProvider = {
-//   provide: QUEUE_SERVICE,
-//   inject: [ConfigService],
-//   useFactory: (configService: ConfigService) =>
-//     ClientProxyFactory.create({
-//       transport: Transport.RMQ,
-//       options: {
-//         urls: [configService.get('QUEUE_URL')],
-//         queue: 'notifications',
-//       },
-//     }),
-// };
+export const queueProvider: AmqpAsyncOptionsInterface = {
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    const { hostname, port, username, password, protocol } = new URL(
+      configService.get('QUEUE_URL'),
+    );
+
+    return {
+      // name: 'queue',
+      hostname,
+      port: +port,
+      username,
+      password,
+      protocol,
+    };
+  },
+};

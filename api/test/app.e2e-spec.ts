@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../../../__SANDBOX__/full-twitterapp/api/src/app.module';
+import { AppModule } from '../src/app.module';
 import { INestApplication } from '@nestjs/common';
 
 describe('AppController (e2e)', () => {

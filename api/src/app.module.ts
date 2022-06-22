@@ -1,19 +1,19 @@
 import * as Joi from '@hapi/joi';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-
+import { RedisModule } from 'nestjs-redis';
+import { AmqpModule } from 'nestjs-amqp';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-import { databaseProvider } from './__shared__/providers/database.provider';
-import { redisProvider } from './__shared__/providers/redis.provider';
-import { MonitoringModule } from './monitoring/monitoring.module';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { LikesModule } from './likes/likes.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TweetsModule } from './tweets/tweets.module';
+import { UsersModule } from './users/users.module';
+import { redisProvider } from './__shared__/providers/redis.provider';
+import { queueProvider } from './__shared__/providers/queue.provider';
 
 @Module({
   imports: [
@@ -22,17 +22,17 @@ import { TweetsModule } from './tweets/tweets.module';
         NODE_ENV: Joi.string().required(),
         CLIENT_ORIGIN: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
-        SECRET: Joi.string().required(),
-        DB_URL: Joi.string().required(),
+        QUEUE_URL: Joi.string().required(),
         SMTP_URL: Joi.string().required(),
-        // QUEUE_URL: Joi.string().required()
+        SECRET: Joi.string().required(),
       }),
     }),
+    RedisModule.forRootAsync(redisProvider),
+    AmqpModule.forRootAsync(queueProvider),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'documentation'),
       serveRoot: '/docs',
     }),
-    MikroOrmModule.forRootAsync(databaseProvider),
     //
     MonitoringModule,
     //
@@ -44,6 +44,6 @@ import { TweetsModule } from './tweets/tweets.module';
     LikesModule,
     TweetsModule,
   ],
-  providers: [Logger, redisProvider],
+  providers: [Logger],
 })
 export class AppModule {}

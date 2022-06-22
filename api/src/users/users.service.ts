@@ -1,5 +1,8 @@
 import { EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
+import { RedisService } from 'nestjs-redis';
+import { InjectAmqpConnection } from 'nestjs-amqp';
+import { Connection } from 'amqplib';
 import {
   ConflictException,
   HttpStatus,
@@ -27,11 +30,13 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
-    @InjectRepository(User)
-    private userRepository: EntityRepository<User>,
+    private readonly redisService: RedisService,
+    @InjectAmqpConnection() private readonly queueService: Connection,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    const client = await this.redisService.getClient();
+
     // unique case: username
     const { username, email } = createUserDto;
 

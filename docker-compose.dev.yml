@@ -1,6 +1,24 @@
 version: "3.7"
 
 services:
+  rabbitmq:
+    container_name: rabbitmq
+    build: ./rabbitmq
+    env_file: ./.env.dev
+    restart: always
+    volumes:
+      - "./rabbitmq/data:/var/lib/rabbitmq"
+    environment:
+      - RABBITMQ_USER=${RABBITMQ_USER:-test}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-test}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+    healthcheck:
+      test: exit 0
+      
   redis:
     container_name: redis
     build: ./redis
@@ -17,28 +35,10 @@ services:
     healthcheck:
       test: exit 0
 
-  db:
-    container_name: db
-    build: ./db
-    env_file: ./.env.dev
-    restart: always
-    volumes:
-      - "./db/data:/var/lib/postgresql/data"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-test}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-test}
-      - POSTGRES_DB=${POSTGRES_DB:-test}
-    ports:
-      - "5432:5432"
-    networks:
-      - backend
-    healthcheck:
-      test: exit 0
-
   api:
     container_name: api
     hostname: api
-    command: [sh, -c, "yarn run docs && yarn start:dev"]
+    command: [ sh, -c, "yarn run docs && yarn start:dev" ]
     env_file: ./.env.dev
     restart: always
     build:
@@ -50,11 +50,9 @@ services:
       - "/usr/src/app/dist"
     environment:
       - NODE_ENV=development
-      - DB_URL=postgres://${POSTGRES_USER:-test}:${POSTGRES_PASSWORD:-test}@db:5432/${POSTGRES_DB:-test}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-test}@redis:6379/0
       - CLIENT_ORIGIN=${CLIENT_ORIGIN:-http://localhost:3000}
     depends_on:
-      - db
       - redis
     ports:
       - "8080:3000"

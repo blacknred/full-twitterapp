@@ -1,7 +1,7 @@
 import { ArrayType, Entity, Index, ManyToOne, Property } from '@mikro-orm/core';
 import { Exclude } from 'class-transformer';
-import { User } from 'src/users/entities/user.entity';
-import { BaseEntity } from 'src/__shared__/entities/base.entity';
+import { User } from '../../users/entities/user.entity';
+import { BaseEntity } from '../../__shared__/entities/base.entity';
 
 @Entity()
 export class Tweet extends BaseEntity {

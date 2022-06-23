@@ -9,11 +9,13 @@ export const userMock: User = {
   name: 'testname testsecondname',
   img: 'testavatarurl',
   bio: 'testuser info',
-  createdAt: new Date().toDateString(),
+  createdAt: Date.now(),
   statusesCnt: 0,
   followersCnt: 0,
   followingCnt: 0,
   bannedByMe: false,
+  followedByMe: true,
+  commonFollowingCnt: 0,
 };
 
 export class UserResponseDto extends BaseResponseDto<User> {

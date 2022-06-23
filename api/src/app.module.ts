@@ -14,6 +14,10 @@ import { StatusModule } from './statuses/statuses.module';
 import { UsersModule } from './users/users.module';
 import { redisProvider } from './__shared__/providers/redis.provider';
 import { queueProvider } from './__shared__/providers/queue.provider';
+import { BansModule } from './bans/bans.module';
+import { StrikesModule } from './strikes/strikes.module';
+import { TrendsService } from './trends/trends.service';
+import { TrendsModule } from './trends/trends.module';
 
 @Module({
   imports: [
@@ -33,15 +37,15 @@ import { queueProvider } from './__shared__/providers/queue.provider';
       rootPath: join(__dirname, '..', 'documentation'),
       serveRoot: '/docs',
     }),
-    //
     MonitoringModule,
-    //
     AuthModule,
-    //
     UsersModule,
-    SubscriptionsModule,
-    //
+    BansModule,
     LikesModule,
+    StrikesModule,
+    TrendsModule,
+    //
+    SubscriptionsModule,
     TweetsModule,
   ],
   providers: [Logger],

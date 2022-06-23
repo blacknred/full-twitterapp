@@ -5,11 +5,13 @@ export type User = {
   bio?: string;
   img?: string;
   isAdmin?: boolean;
-  createdAt: string;
+  createdAt: number;
   //
   email?: string;
   followersCnt: number;
   followingCnt: number;
   statusesCnt: number;
   bannedByMe: boolean;
+  followedByMe: boolean;
+  commonFollowingCnt: number;
 };

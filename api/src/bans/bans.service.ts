@@ -7,6 +7,7 @@ import { RedisService } from 'nestjs-redis';
 export class BansService {
   private readonly logger = new Logger(BansService.name);
 
+  // blacklist:uid uid^createdAt
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,

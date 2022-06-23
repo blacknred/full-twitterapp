@@ -50,21 +50,15 @@ Monolith boilerplate for Twitter type social network app
 - Rabbit request batching?
 - Rabbit schedulling(rabbitmq_delayed_message_exchange):
   - user hard deleting(time threshold)
+    - SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
   - striked statusses(count threshold)
   - scheduled statuses
+- Custom(redis, rabbit) termius health indicators
 
+pagination: createdAt=20045455, limit=20
+sort: sort=ASC|DESC
+filters: 
 
-<!-- Entities/Cache(highly_requested) -->
-- [subscriptions]
-- [likes]
-- [blacklist](_authors whose recommendations and tweets/likes are ignored_)
-  - data: blacklist:userid(set with userid)
-  - api: POST /, DELETE /id
-
-<!-- Temp data(redis) -->
-- [auth](_temp_codes_)
-  - data: codes(sset code^userid)
-  - api:
 - [recommendations](_authors recommendations_)
   - data: recommendations:userid(list/100)
     - when tweet request
@@ -72,9 +66,7 @@ Monolith boilerplate for Twitter type social network app
     - on request
       - add followings of my followings && not in blacklist
   - api: GET(polling, keyset pagination) /
-- [trends](_tweets-trends_)
-  - data: trends
-  - api: GET(polling, keyset pagination) /
+
 
 - [notifications](notifications:userid(queue list), GET / (sse))
   - data:
@@ -92,31 +84,7 @@ Monolith boilerplate for Twitter type social network app
     if (conn.zscore(deleted, uid)) conn.zrem(deleted, uid)
   - GET
 
-<!-- users -->
-- DATA:
-  - `user:id {id,username,name,bio?,createdAt,followersCnt,followingCnt,statusesCnt}`
-  - `user:id:secured {email, password}`
-  - `user:username uid`
-  - `user:email uid`
-  - `deleted uid^deletedAt`
-- API:
-  - POST
-    #if email/username are in use
-    if (conn.get(user:email) || conn.get(user:username)) return Err
-    #create user & co
-    id = conn.incr('user:id:')
-    pipeline.hset('users:username, id)
-    pipeline.hset('users:email, id)
-    pipeline.hmset(user:id, {id,username,name,bio,followers:0,following:0,posts:0, createdAt})
-    pipeline.hmset(user:id:sequred, {email,password}
-    this.password = await bcrypt.hash(this.password, 8);
-  - GET
-  - PATCH
-  - DELETE
-    #if user not exists
-    if (conn.zscore(deleted, uid)) return Err
-    #soft delete user
-    conn.zadd(deleted,uid,now())
+
 
 <!-- statuses -->
 - DATA:
@@ -184,13 +152,3 @@ def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
   <!-- Filter will remove any “missing” status messages that had been prev deleted -->
   return filter(None, pipeline.execute())
 
-
-<!-- likes -->
-- DATA:
-  - `likes:uid sid^createdAt`
-  - `likes:sid uid^createdAt`
-  <!-- - `likes sid^uid` -->
-- API
-  - POST(sid)
-  - GET(uid, sid)
-  - DELETE(sid)

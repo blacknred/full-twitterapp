@@ -3,6 +3,7 @@ import { IsBoolean, IsIn, IsNumberString, IsOptional } from 'class-validator';
 
 import {
   KeysetPaginationDto,
+  PaginatedRequestDto,
   SortingDto,
 } from '../../__shared__/dto/request.dto';
 
@@ -13,15 +14,7 @@ class UsersSortingDto extends SortingDto {
   'sort.field': 'username' | 'name' | 'email' | 'createdAt';
 }
 
-export class GetUsersDto extends IntersectionType(
-  KeysetPaginationDto,
-  UsersSortingDto,
-) {
-  @ApiProperty({ type: 'number', example: Date.now(), required: false })
-  @IsOptional()
-  @IsNumberString({ message: 'Must be a number' })
-  createdAt?: number;
-
+export class GetUsersDto extends PaginatedRequestDto {
   @ApiProperty({ type: 'boolean', example: true, required: false })
   @IsOptional()
   @IsBoolean({ message: 'Must be a boolean' })

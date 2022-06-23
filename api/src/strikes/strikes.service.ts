@@ -7,6 +7,7 @@ import { RedisService } from 'nestjs-redis';
 export class StrikesService {
   private readonly logger = new Logger(StrikesService.name);
 
+  // strikes:uid sid^createdAt
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,

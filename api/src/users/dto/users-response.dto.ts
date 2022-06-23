@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { PaginatedResponseDto } from 'src/__shared__/dto/response.dto';
 import { User } from '../types/user.type';
 import { userMock } from './user-response.dto';

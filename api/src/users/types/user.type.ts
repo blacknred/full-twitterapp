@@ -5,7 +5,9 @@ export type User = {
   bio?: string;
   img?: string;
   createdAt: string;
-  // email: string;
-  // password: string;
-  // rating: number;
+  //
+  email?: string;
+  followersCnt: number;
+  followingCnt: number;
+  statusesCnt: number;
 };

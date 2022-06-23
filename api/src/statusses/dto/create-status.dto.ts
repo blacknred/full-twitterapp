@@ -1,7 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+
+export class StatusDto {
+  @ApiProperty({ example: 'testrole' })
+  name: string;
+
+  @ApiProperty({
+    enum: Privilege,
+    example: Privilege.EDIT_WORKSPACE,
+    isArray: true,
+  })
+  privileges: Privilege[];
+}
 
 export class CreateStatusDto {
+  @ApiProperty({
+    type: StatusDto,
+    isArray: true
+  })
+  @IsOptional()
+  @IsArray({ message: 'Must be an array' })
+  @IsString({ message: 'Must includes a strings', each: true })
+  statuses?: string[];
+
+
   @ApiProperty({ type: 'string', example: 'testname testsecondname' })
   @IsOptional()
   @IsString({ message: 'Must be a string' })

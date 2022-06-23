@@ -50,9 +50,7 @@ feeds/notifications => redis queue(brpop list)
 group repost
 
 
-<!-- Entities(pg) -->
-- [users]
-- [tweets]
+
 
 <!-- Entities/Cache(highly_requested) -->
 - [subscriptions]
@@ -84,8 +82,6 @@ group repost
   - api: GET(sse) /
 
 
-
-
 <!-- auth -->
 - DATA
 - API
@@ -96,7 +92,7 @@ group repost
 
 <!-- users -->
 - DATA:
-  - `user:id {id,username,name,bio?,createdAt,followersCnt,followingCnt,statusCnt}`
+  - `user:id {id,username,name,bio?,createdAt,followersCnt,followingCnt,statusesCnt}`
   - `user:id:secured {email, password}`
   - `user:username uid`
   - `user:email uid`
@@ -122,7 +118,7 @@ group repost
 
 <!-- statuses -->
 - DATA:
-  - `status:id {id,text?,media[],authorId,originId}`
+  - `status:id {id,text?,media[],authorId,originId,createdAt}`
   - `statusses:uid sid^createdAt`
   - `feed:uid sid^createdAt`
 - API
@@ -184,13 +180,6 @@ def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
   for id in statuses: pipeline.hgetall('status:%s'%id)
   <!-- Filter will remove any “missing” status messages that had been prev deleted -->
   return filter(None, pipeline.execute())
-
-
-
-
-
-full-taskapp[pg,redis,mircoservices,react-spa]
-full-twitterapp[redis,monolit,next]
 
 
 <!-- likes -->

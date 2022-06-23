@@ -1,5 +1,6 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+import { IsIn, IsNumberString, IsOptional } from 'class-validator';
+
 import {
   KeysetPaginationDto,
   SortingDto,
@@ -18,4 +19,14 @@ export class GetStatusesDto extends IntersectionType(
 ) {
   @ApiProperty({ example: new Date().toDateString(), required: false })
   createdAt?: string;
+
+  @ApiProperty({ type: 'number', example: 1 })
+  @IsOptional()
+  @IsNumberString({ message: 'Must be a number' })
+  uid?: number;
+
+  @ApiProperty({ type: 'number', example: 1 })
+  @IsOptional()
+  @IsNumberString({ message: 'Must be a number' })
+  sid?: number;
 }

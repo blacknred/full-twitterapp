@@ -51,6 +51,8 @@ group repost
 
 
 
+Rabbit schedulling: user hard deleting, statusses with strikes, delayed posting, request batching?
+
 
 <!-- Entities/Cache(highly_requested) -->
 - [subscriptions]
@@ -118,8 +120,9 @@ group repost
 
 <!-- statuses -->
 - DATA:
-  - `status:id {id,text?,media[],authorId,originId,createdAt}`
+  - `status:id {id,text?,media[],authorId,sid,createdAt,likesCnt,repostsCnt,retweetsCnt}`
   - `statusses:uid sid^createdAt`
+  - ``
   - `feed:uid sid^createdAt`
 - API
   - POST

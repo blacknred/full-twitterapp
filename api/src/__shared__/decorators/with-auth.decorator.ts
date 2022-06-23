@@ -1,11 +1,12 @@
 import { applyDecorators, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { AdminGuard } from '../guards/admin.guard';
 import { AuthGuard } from '../guards/auth.guard';
 
-export function WithAuth() {
+export function WithAuth(onlyAdmin?: boolean) {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiCookieAuth(),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
-    UseGuards(AuthGuard),
+    UseGuards(onlyAdmin ? AdminGuard : AuthGuard),
   );
 }

@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PassportSerializer, PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
-import { IResponse } from 'src/__shared__/interfaces/response.interface';
+import { BaseResponse } from 'src/__shared__/types/response.type';
 import { USER_SERVICE } from '../consts';
 import { IAuth } from '../interfaces/auth.interface';
 import { IUser } from '../interfaces/user.interface';
@@ -20,7 +20,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   async validate(email: string, password: string) {
     const params = { password, email };
     const { status, ...rest } = await this.userService
-      .send<IResponse<IUser>>('users/getOne', params)
+      .send<BaseResponse<IUser>>('users/getOne', params)
       .toPromise();
 
     if (status !== HttpStatus.OK) {

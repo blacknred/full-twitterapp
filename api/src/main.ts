@@ -5,7 +5,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { API_PREFIX } from './__shared__/consts';
-import { AllExceptionFilter } from './__shared__/filters/all-exception.filter';
 import { ValidationPipe } from './__shared__/pipes/validation.pipe';
 
 async function bootstrap() {
@@ -15,7 +14,6 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.useGlobalFilters(new AllExceptionFilter());
 
   app.enableCors({
     origin: configService.get('CLIENT_ORIGIN'),

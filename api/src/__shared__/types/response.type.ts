@@ -3,8 +3,8 @@ export type ValidationErrorDto = {
   message: string;
 };
 
-export interface IResponse<T = unknown> {
+export type BaseResponse<T = unknown> = {
   errors?: ValidationErrorDto[];
   data?: T;
   message?: string;
-}
+};

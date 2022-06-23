@@ -10,8 +10,6 @@ import {
   Query,
   Req,
   UseFilters,
-  UseInterceptors,
-  UsePipes,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags } from '@nestjs/swagger';
@@ -23,7 +21,6 @@ import {
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { EmptyResponseDto } from 'src/__shared__/dto/response.dto';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
-import { ProxyInterceptor } from 'src/__shared__/interceptors/proxy.interceptor';
 import { USER_SERVICE } from './consts';
 import { CreateTokenDto } from './dto/create-token.dto.ts.tx';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -36,29 +33,23 @@ import { UsersResponseDto } from './dto/users-response.dto';
 
 @ApiTags('Users')
 @Controller('users')
+@UseFilters(AllExceptionFilter)
 export class UsersController {
   constructor(
-    @Inject(USER_SERVICE) protected readonly userService: ClientProxy,
+    @Inject(USER_SERVICE) protected readonly usersService: ClientProxy,
   ) {}
-
-  // Users
 
   @Post()
   @WithCreatedApi(UserResponseDto, 'Create new user')
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    return this.userService.send('users/create', createUserDto).toPromise();
+    return this.usersService.create(createUserDto);
   }
 
   @Get()
-  @WithAuth()
+  @WithAuth(true)
   @WithOkApi(UsersResponseDto, 'List all users')
-  async getAll(
-    @Auth('user') { isAdmin },
-    @Query() getUsersDto: GetUsersDto,
-  ): Promise<UsersResponseDto> {
-    return this.userService
-      .send('users/getAll', { ...getUsersDto, partial: !isAdmin })
-      .toPromise();
+  async getAll(@Query() getUsersDto: GetUsersDto): Promise<UsersResponseDto> {
+    return this.usersService.findAll(getUsersDto);
   }
 
   @Get(':id')

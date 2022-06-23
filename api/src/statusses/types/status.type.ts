@@ -6,7 +6,7 @@ export type Status = {
   media?: string[];
   createdAt: string;
   author: User;
-  origin?: Status;
+  status?: Status;
   //
   likesCnt: number;
   retweetsCnt: number;

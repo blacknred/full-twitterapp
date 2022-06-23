@@ -1,8 +1,8 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { CreateUserDto } from './create-like.dto';
+import { CreateStatusDto, CreateUserDto } from './create-status.dto';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateStatusDto extends PartialType(CreateStatusDto) {
   @ApiProperty({
     type: 'string',
     example: 'testname testsecondname',

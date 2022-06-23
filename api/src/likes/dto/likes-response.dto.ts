@@ -1,19 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PaginatedResponseDto } from 'src/__shared__/dto/response.dto';
-import { IUser } from '../interfaces/like.interface';
-import { userMock } from './like-response.dto';
 
-const userPaginationMock = {
+import { PaginatedResponseDto } from '../../__shared__/dto/response.dto';
+import { Like } from '../types/like.type';
+import { likeMock } from './like-response.dto';
+
+const likePaginationMock = {
   hasMore: true,
   total: 100,
-  items: [userMock],
+  items: [likeMock],
 };
 
-export class UsersResponseDto extends PaginatedResponseDto<IUser> {
-  @ApiProperty({ example: userPaginationMock, required: false })
+export class UsersResponseDto extends PaginatedResponseDto<Like> {
+  @ApiProperty({ example: likePaginationMock, required: false })
   data?: {
     hasMore: boolean;
     total: number;
-    items: IUser[];
+    items: Like[];
   };
 }

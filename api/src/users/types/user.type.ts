@@ -1,4 +1,4 @@
-export interface IUser {
+export type User = {
   id: number;
   username: string;
   name: string;
@@ -8,4 +8,4 @@ export interface IUser {
   // email: string;
   // password: string;
   // rating: number;
-}
+};

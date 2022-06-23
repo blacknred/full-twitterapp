@@ -12,7 +12,7 @@ class UsersSortingDto extends SortingDto {
   'sort.field': 'username' | 'name' | 'email' | 'createdAt';
 }
 
-export class GetUsersDto extends IntersectionType(
+export class GetStatusesDto extends IntersectionType(
   KeysetPaginationDto,
   UsersSortingDto,
 ) {

@@ -10,7 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { LikesModule } from './likes/likes.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
-import { TweetsModule } from './tweets/tweets.module';
+import { TweetsModule } from './statusses/statuses.module';
 import { UsersModule } from './users/users.module';
 import { redisProvider } from './__shared__/providers/redis.provider';
 import { queueProvider } from './__shared__/providers/queue.provider';

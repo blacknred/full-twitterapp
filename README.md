@@ -1,6 +1,6 @@
 # Twitter
 
-Monolit boilerplate for Twitter type social network app
+Monolith boilerplate for Twitter type social network app
 
 ## Architecture
 
@@ -96,7 +96,7 @@ group repost
 
 <!-- users -->
 - DATA:
-  - `user:id {id,username,name,bio,createdAt,followers,following,posts}`
+  - `user:id {id,username,name,bio?,createdAt,followersCnt,followingCnt,statusCnt}`
   - `user:id:secured {email, password}`
   - `user:username uid`
   - `user:email uid`
@@ -111,6 +111,7 @@ group repost
     pipeline.hset('users:email, id)
     pipeline.hmset(user:id, {id,username,name,bio,followers:0,following:0,posts:0, createdAt})
     pipeline.hmset(user:id:sequred, {email,password}
+    this.password = await bcrypt.hash(this.password, 8);
   - GET
   - PATCH
   - DELETE
@@ -121,7 +122,7 @@ group repost
 
 <!-- statuses -->
 - DATA:
-  - `status:id {}`
+  - `status:id {id,text?,media[],authorId,originId}`
   - `statusses:uid sid^createdAt`
   - `feed:uid sid^createdAt`
 - API
@@ -133,8 +134,7 @@ group repost
     pipeline.hincrby('user:uid, 'posts') <!-- increment posts counter in user -->
     pipeline.execute()
 
-    @mentions
-    #hashes
+    parse text for @mentions, #hashes
     ZSET to store status IDs as ZSET members, with the timestamp
   - GET
   - PATCH
@@ -193,3 +193,12 @@ full-taskapp[pg,redis,mircoservices,react-spa]
 full-twitterapp[redis,monolit,next]
 
 
+<!-- likes -->
+- DATA:
+  - `likes:uid sid^createdAt`
+  - `likes:sid uid^createdAt`
+  <!-- - `likes sid^uid` -->
+- API
+  - POST(sid)
+  - GET(uid, sid)
+  - DELETE(sid)

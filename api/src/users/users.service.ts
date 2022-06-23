@@ -23,7 +23,7 @@ import { GetWorkspacesDto } from './dto/get-workspaces.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { User, Workspace } from './entities/user.entity';
-import { BaseRole, Privilege } from './interfaces/user.interface';
+import { BaseRole, Privilege } from './types/user.type';
 
 @Injectable()
 export class UsersService {
@@ -36,6 +36,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const client = await this.redisService.getClient();
+    const o = await client.zinterstore('g');
 
     // unique case: username
     const { username, email } = createUserDto;

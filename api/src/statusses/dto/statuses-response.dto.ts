@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaginatedResponseDto } from 'src/__shared__/dto/response.dto';
-import { IUser } from '../interfaces/tweet.interface';
-import { userMock } from './tweet-response.dto';
+import { IUser, Status } from '../types/status.type';
+import { userMock } from './status-response.dto';
 
 const userPaginationMock = {
   hasMore: true,
@@ -9,11 +9,11 @@ const userPaginationMock = {
   items: [userMock],
 };
 
-export class UsersResponseDto extends PaginatedResponseDto<IUser> {
+export class StatusesResponseDto extends PaginatedResponseDto<Status> {
   @ApiProperty({ example: userPaginationMock, required: false })
   data?: {
     hasMore: boolean;
     total: number;
-    items: IUser[];
+    items: Status[];
   };
 }

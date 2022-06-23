@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaginatedResponseDto } from 'src/__shared__/dto/response.dto';
-import { IUser } from '../interfaces/subscription.interface';
+import { IUser } from '../types/subscription.type';
 import { userMock } from './subscription-response.dto';
 
 const userPaginationMock = {

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateTweetDto {
+export class CreateStatusDto {
   @ApiProperty({ type: 'string', example: 'testname testsecondname' })
   @IsOptional()
   @IsString({ message: 'Must be a string' })

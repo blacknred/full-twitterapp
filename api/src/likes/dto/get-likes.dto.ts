@@ -1,21 +1,32 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+import { IsIn, IsNumberString, IsOptional } from 'class-validator';
+
 import {
   KeysetPaginationDto,
   SortingDto,
 } from '../../__shared__/dto/request.dto';
 
-class UsersSortingDto extends SortingDto {
-  @IsIn(['username', 'name', 'email', 'createdAt'], {
-    message: 'Must be a one of fields of the User entity',
+class LikesSortingDto extends SortingDto {
+  @IsIn(['uid', 'sid', 'createdAt'], {
+    message: 'Must be a one of valid fields',
   })
-  'sort.field': 'username' | 'name' | 'email' | 'createdAt';
+  'sort.field': 'uid' | 'sid' | 'createdAt';
 }
 
-export class GetUsersDto extends IntersectionType(
+export class GetLikesDto extends IntersectionType(
   KeysetPaginationDto,
-  UsersSortingDto,
+  LikesSortingDto,
 ) {
   @ApiProperty({ example: new Date().toDateString(), required: false })
   createdAt?: string;
+
+  @ApiProperty({ type: 'number', example: 1 })
+  @IsOptional()
+  @IsNumberString({ message: 'Must be a number' })
+  uid?: number;
+
+  @ApiProperty({ type: 'number', example: 1 })
+  @IsOptional()
+  @IsNumberString({ message: 'Must be a number' })
+  sid?: number;
 }

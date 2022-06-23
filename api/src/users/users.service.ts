@@ -147,31 +147,4 @@ export class UsersService {
 
     return { data: null };
   }
-
-  // async restore(id: string, userId: number) {
-  //   try {
-  //     const res = await this.findOne(id, null, true);
-  //     if (!res.data) return res as ResponseDto;
-
-  //     // creator
-  //     if (res.data.creatorId !== userId) {
-  //       return {
-  //         status: HttpStatus.FORBIDDEN,
-  //         data: null,
-  //       };
-  //     }
-
-  //     res.data.deletedAt = null;
-  //     await this.workspaceRepository.flush();
-
-  //     return {
-  //       status: HttpStatus.OK,
-  //       data: res.data,
-  //     };
-  //   } catch (e) {
-  //     throw new RpcException({
-  //       status: HttpStatus.PRECONDITION_FAILED,
-  //     });
-  //   }
-  // }
 }

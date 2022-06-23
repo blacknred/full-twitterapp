@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { statusMock } from 'src/statusses/dto/status-response.dto';
+import { statusMock } from 'src/statuses/dto/status-response.dto';
 import { userMock } from 'src/users/dto/user-response.dto';
 import { BaseResponseDto } from '../../__shared__/dto/response.dto';
 import { Strike } from '../types/strike.type';
@@ -8,7 +8,7 @@ import { Strike } from '../types/strike.type';
 export const strikeMock: Strike = {
   user: userMock,
   status: statusMock,
-  createdAt: new Date().toDateString(),
+  createdAt: Date.now(),
   reason: 'strong reason',
 };
 

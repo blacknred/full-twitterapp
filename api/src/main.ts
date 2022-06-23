@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
+
 import { AppModule } from './app.module';
 import { API_PREFIX } from './__shared__/consts';
 import { ValidationPipe } from './__shared__/pipes/validation.pipe';
@@ -20,8 +21,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.use(json({ limit: '2mb' }));
-  app.use(urlencoded({ extended: true, limit: '2mb' }));
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   const options = new DocumentBuilder()
     .setTitle('Twitterapp API')
@@ -29,12 +30,16 @@ async function bootstrap() {
     .addBasicAuth()
     .addBearerAuth()
     .setVersion('1.0')
+    .addTag('Metrics')
     .addTag('Auth')
     .addTag('Users')
-    .addTag('Tweets')
+    .addTag('Statuses')
     .addTag('Subscriptions')
     .addTag('Likes')
-    .addTag('Metrics')
+    .addTag('Trends')
+    .addTag('Recommendations')
+    .addTag('Bans')
+    .addTag('Strikes')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
@@ -45,7 +50,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-// @ApiBasicAuth()
-// @ApiBearerAuth()
-// @Controller('cats')

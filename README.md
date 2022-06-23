@@ -43,15 +43,15 @@ Monolith boilerplate for Twitter type social network app
    make prod
    ```
 
-<!-- Extras -->
-scheduled tweets => Rabbitmq, rabbitmq_delayed_message_exchange
-redis pubsub case?
-feeds/notifications => redis queue(brpop list)
-group repost
+## TODO
 
-
-
-Rabbit schedulling: user hard deleting, statusses with strikes, delayed posting, request batching?
+- Redis pubsub case?
+- Redis geospatial - local statuses at first?
+- Rabbit request batching?
+- Rabbit schedulling(rabbitmq_delayed_message_exchange):
+  - user hard deleting(time threshold)
+  - striked statusses(count threshold)
+  - scheduled statuses
 
 
 <!-- Entities/Cache(highly_requested) -->
@@ -77,10 +77,10 @@ Rabbit schedulling: user hard deleting, statusses with strikes, delayed posting,
   - api: GET(polling, keyset pagination) /
 
 - [notifications](notifications:userid(queue list), GET / (sse))
-  - data: 
+  - data:
   - api: GET(sse) /
 - [timeline]
-  - data: 
+  - data:
   - api: GET(sse) /
 
 

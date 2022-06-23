@@ -13,6 +13,7 @@ export const userMock: User = {
   statusesCnt: 0,
   followersCnt: 0,
   followingCnt: 0,
+  bannedByMe: false,
 };
 
 export class UserResponseDto extends BaseResponseDto<User> {

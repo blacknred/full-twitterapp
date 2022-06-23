@@ -18,7 +18,8 @@ export class GetLikesDto extends IntersectionType(
   LikesSortingDto,
 ) {
   @ApiProperty({ example: new Date().toDateString(), required: false })
-  createdAt?: string;
+  @IsNumberString({ message: 'Must be a number' })
+  createdAt?: number;
 
   @ApiProperty({ type: 'number', example: 1 })
   @IsOptional()

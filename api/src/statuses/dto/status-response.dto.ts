@@ -13,6 +13,8 @@ export const statusMock: Status = {
   likesCnt: 0,
   repostsCnt: 0,
   retweetsCnt: 0,
+  likedByMe: true,
+  retweetedByMe: true,
 };
 
 export class StatusResponseDto extends BaseResponseDto<Status> {

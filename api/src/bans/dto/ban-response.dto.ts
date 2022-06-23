@@ -6,7 +6,7 @@ import { Ban } from '../types/ban.type';
 
 export const banMock: Ban = {
   user: userMock,
-  createdAt: new Date().toDateString(),
+  createdAt: Date.now(),
 };
 
 export class BanResponseDto extends BaseResponseDto<Ban> {

@@ -11,4 +11,6 @@ export type Status = {
   likesCnt: number;
   retweetsCnt: number;
   repostsCnt: number;
+  likedByMe: boolean;
+  retweetedByMe: boolean;
 };

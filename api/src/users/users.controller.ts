@@ -3,16 +3,14 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
   Query,
-  Req,
   UseFilters,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags } from '@nestjs/swagger';
+
 import { Auth } from 'src/__shared__/decorators/auth.decorator';
 import {
   WithCreatedApi,
@@ -21,23 +19,19 @@ import {
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { EmptyResponseDto } from 'src/__shared__/dto/response.dto';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
-import { USER_SERVICE } from './consts';
-import { CreateTokenDto } from './dto/create-token.dto.ts.tx';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
-import { RestoreUserDto } from './dto/restore-user.dto.ts.tx';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersResponseDto } from './dto/users-response.dto';
+import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
 @UseFilters(AllExceptionFilter)
 export class UsersController {
-  constructor(
-    @Inject(USER_SERVICE) protected readonly usersService: ClientProxy,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @WithCreatedApi(UserResponseDto, 'Create new user')
@@ -56,7 +50,7 @@ export class UsersController {
   @WithAuth(true)
   @WithOkApi(UserResponseDto, 'Get user by id')
   async getOne(@Param() { id }: GetUserDto): Promise<UserResponseDto> {
-    return this.userService.send('users/getOne', { id: +id }).toPromise();
+    return this.usersService.findOne(id);
   }
 
   @Patch()
@@ -66,34 +60,13 @@ export class UsersController {
     @Auth('user') { id },
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    return this.userService
-      .send('users/update', { id, ...updateUserDto })
-      .toPromise();
-  }
-
-  @Patch('restore')
-  @WithOkApi(UserResponseDto, 'Restore user')
-  async restore(
-    @Body() restoreUserDto: RestoreUserDto,
-  ): Promise<UserResponseDto> {
-    return this.userService.send('users/restore', restoreUserDto).toPromise();
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete()
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete authorized user')
-  async remove(@Auth('user') { id }, @Req() req): Promise<EmptyResponseDto> {
-    req.session.destroy();
-    return this.userService.send('users/delete', { id }).toPromise();
-  }
-
-  // Tokens
-
-  @Post('token')
-  @WithCreatedApi(EmptyResponseDto, 'Create new access token')
-  async createToken(
-    @Body() createTokenDto: CreateTokenDto,
-  ): Promise<EmptyResponseDto> {
-    return this.userService.send('tokens/create', createTokenDto).toPromise();
+  async remove(@Auth('user') { id }): Promise<EmptyResponseDto> {
+    return this.usersService.remove(id);
   }
 }

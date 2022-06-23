@@ -10,7 +10,7 @@ const likePaginationMock = {
   items: [likeMock],
 };
 
-export class UsersResponseDto extends PaginatedResponseDto<Like> {
+export class LikesResponseDto extends PaginatedResponseDto<Like> {
   @ApiProperty({ example: likePaginationMock, required: false })
   data?: {
     hasMore: boolean;

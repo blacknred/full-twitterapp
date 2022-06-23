@@ -10,3 +10,6 @@ export function WithAuth(onlyAdmin?: boolean) {
     UseGuards(onlyAdmin ? AdminGuard : AuthGuard),
   );
 }
+// @ApiBasicAuth()
+// @ApiBearerAuth()
+// @Controller('cats')

@@ -40,14 +40,18 @@ export class UsersController {
   }
 
   @Get()
-  @WithAuth(true)
+  @WithAuth()
   @WithOkApi(UsersResponseDto, 'List all users')
-  async getAll(@Query() getUsersDto: GetUsersDto): Promise<UsersResponseDto> {
+  async getAll(
+    @Auth('user') { isAdmin },
+    @Query() getUsersDto: GetUsersDto,
+  ): Promise<UsersResponseDto> {
+    if (!isAdmin) getUsersDto.recommended = true;
     return this.usersService.findAll(getUsersDto);
   }
 
   @Get(':id')
-  @WithAuth(true)
+  @WithAuth()
   @WithOkApi(UserResponseDto, 'Get user by id')
   async getOne(@Param() { id }: GetUserDto): Promise<UserResponseDto> {
     return this.usersService.findOne(id);

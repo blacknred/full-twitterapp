@@ -1,25 +1,14 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { IsIn, IsNumberString, IsOptional } from 'class-validator';
-
+import { ApiProperty } from '@nestjs/swagger';
 import {
-  KeysetPaginationDto,
-  SortingDto,
-} from '../../__shared__/dto/request.dto';
+  IsBoolean,
+  IsNumberString,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
-class UsersSortingDto extends SortingDto {
-  @IsIn(['username', 'name', 'email', 'createdAt'], {
-    message: 'Must be a one of fields of the User entity',
-  })
-  'sort.field': 'username' | 'name' | 'email' | 'createdAt';
-}
+import { PaginatedRequestDto } from '../../__shared__/dto/request.dto';
 
-export class GetStatusesDto extends IntersectionType(
-  KeysetPaginationDto,
-  UsersSortingDto,
-) {
-  @ApiProperty({ example: new Date().toDateString(), required: false })
-  createdAt?: string;
-
+export class GetStatusesDto extends PaginatedRequestDto {
   @ApiProperty({ type: 'number', example: 1 })
   @IsOptional()
   @IsNumberString({ message: 'Must be a number' })
@@ -29,4 +18,16 @@ export class GetStatusesDto extends IntersectionType(
   @IsOptional()
   @IsNumberString({ message: 'Must be a number' })
   sid?: number;
+
+  @ApiProperty({ type: 'string', example: 'test' })
+  @IsOptional()
+  @IsString({ message: 'Must be a string' })
+  hash?: string;
+
+  @ApiProperty({ type: 'boolean', example: true })
+  @IsOptional()
+  @IsBoolean({ message: 'Must be a boolean' })
+  trended?: boolean;
+
+  // likesCnt,repostsCnt,retweetsCnt
 }

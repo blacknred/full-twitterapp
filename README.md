@@ -89,9 +89,10 @@ filters:
 <!-- statuses -->
 - DATA:
   - `status:id {id,text?,media[],authorId,sid,createdAt,likesCnt,repostsCnt,retweetsCnt}`
-  - `statusses:uid sid^createdAt`
-  - ``
-  - `feed:uid sid^createdAt`
+  - `statuses:uid sid^createdAt`
+  - `hashes:hash sid^createdAt`
+
+  - `feed:uid sid^createdAt`(@mention,followings,...)
 - API
   - POST
     pipeline.hget('user:uid, 'login')
@@ -143,8 +144,10 @@ filters:
   - DELETE
 
 <!-- timelines -->
-statusses:uid statusid^createdAt
-home:uid status^createdAt
+statuses:uid sid^createdAt
+
+
+home:uid status^createdAt <1000
 
 def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
   statuses = conn.zrevrange('%s%s'%(timeline, uid), (page-1)*count, page*count-1)
@@ -152,3 +155,15 @@ def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
   <!-- Filter will remove any “missing” status messages that had been prev deleted -->
   return filter(None, pipeline.execute())
 
+
+notifications---sse until reload, badge
+likes, reposts, retweets of my statuses
+mentions of me
+{status,user,type: like|mention} 
+
+feed--sse while on home page, buffered, no badge
+likes, reposts, retweets of my subscriptions
+feed:uid
+
+
+expro

@@ -7,15 +7,16 @@ import { RedisService } from 'nestjs-redis';
 export class LikesService {
   private readonly logger = new Logger(LikesService.name);
 
-  // likes:uid sid^createdAt
-  // likes:sid uid^createdAt
-  // <!-- - `likes sid^uid` -->
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,
   ) {}
 
-  async create() {}
+  async create() {
+    // likes:uid sid^createdAt
+    // likes:sid uid^createdAt
+    // <!-- - `likes sid^uid` -->
+  }
 
   async findAll() {}
 

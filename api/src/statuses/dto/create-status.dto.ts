@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsNumberString,
   IsOptional,
@@ -23,6 +25,7 @@ export class StatusDto {
   })
   @IsOptional()
   @IsArray({ message: 'Must be an array' })
+  @ArrayMaxSize(4)
   @IsString({ message: 'Must includes a strings', each: true })
   media?: string[];
 
@@ -39,5 +42,6 @@ export class CreateStatusDto {
   })
   @IsArray({ message: 'Must be an array' })
   @ValidateNested({ each: true })
+  @Type(() => StatusDto)
   statuses: StatusDto[];
 }

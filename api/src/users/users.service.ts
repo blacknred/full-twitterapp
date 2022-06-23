@@ -16,6 +16,8 @@ export class UsersService {
   // user:username uid
   // user:email uid
   // deleted uid^deletedAt
+  // users uid^deletedAt
+  // recommend:uid uid^createdAt
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,

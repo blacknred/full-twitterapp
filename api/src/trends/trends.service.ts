@@ -7,13 +7,14 @@ import { RedisService } from 'nestjs-redis';
 export class TrendsService {
   private readonly logger = new Logger(TrendsService.name);
 
-  // trends hash^statuses_cnt <100
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,
   ) {}
 
-  async create() {}
+  async create() {
+    // trends hash^statuses_cnt <100 cut
+  }
 
   async findAll() {}
 }

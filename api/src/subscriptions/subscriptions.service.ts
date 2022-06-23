@@ -4,9 +4,10 @@ import { InjectAmqpConnection } from 'nestjs-amqp';
 import { RedisService } from 'nestjs-redis';
 
 @Injectable()
-export class LikesService {
-  private readonly logger = new Logger(LikesService.name);
+export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
 
+  // blacklist:uid uid^createdAt
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,
@@ -15,10 +16,6 @@ export class LikesService {
   async create() {}
 
   async findAll() {}
-
-  async findOne() {}
-
-  async update() {}
 
   async remove() {}
 }

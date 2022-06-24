@@ -50,31 +50,27 @@ Monolith boilerplate for Twitter type social network app
 - Rabbit request batching?
 - Rabbit schedulling(rabbitmq_delayed_message_exchange):
   - user hard deleting(time threshold)
-    - SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
+    - pg version: SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
   - striked statusses(count threshold)
   - scheduled statuses
 - Custom(redis, rabbit) termius health indicators
 
 pagination: createdAt=20045455, limit=20
 sort: sort=ASC|DESC
-filters: 
+filters: ...
 
-- [recommendations](_authors recommendations_)
-  - data: recommendations:userid(list/100)
-    - when tweet request
-      - put author_id of viewed tweet that i dont follow && not in blacklist
-    - on request
-      - add followings of my followings && not in blacklist
-  - api: GET(polling, keyset pagination) /
-
-
-- [notifications](notifications:userid(queue list), GET / (sse))
-  - data:
-  - api: GET(sse) /
-- [timeline]
-  - data:
-  - api: GET(sse) /
-
+- monitoring
+- auth
+- users
+  - users
+  - subscriptions
+  - bans
+- statuses
+  - statuses
+  - strikes
+  - likes
+  - feeds
+  - notifications
 
 <!-- auth -->
 - DATA
@@ -84,15 +80,16 @@ filters:
     if (conn.zscore(deleted, uid)) conn.zrem(deleted, uid)
   - GET
 
-
-
 <!-- statuses -->
 - DATA:
   - `status:id {id,text?,media[],authorId,sid,createdAt,likesCnt,repostsCnt,retweetsCnt}`
   - `statuses:uid sid^createdAt`
   - `hashes:hash sid^createdAt`
 
-  - `feed:uid sid^createdAt`(@mention,followings,...)
+  - `feed:uid sid|{uid,sid}^createdAt <1000` following activity
+  - `notifications:uid sid(@mention,repost,reply)|{uid,sid}{like)` me related activity
+
+    {sid,uid,type[like|mention|repost|reply]}
 - API
   - POST
     pipeline.hget('user:uid, 'login')
@@ -143,27 +140,25 @@ filters:
   - GET
   - DELETE
 
-<!-- timelines -->
-statuses:uid sid^createdAt
-
-
-home:uid status^createdAt <1000
-
+<!-- feeds -->
 def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
   statuses = conn.zrevrange('%s%s'%(timeline, uid), (page-1)*count, page*count-1)
   for id in statuses: pipeline.hgetall('status:%s'%id)
   <!-- Filter will remove any “missing” status messages that had been prev deleted -->
   return filter(None, pipeline.execute())
 
-
-notifications---sse until reload, badge
-likes, reposts, retweets of my statuses
-mentions of me
-{status,user,type: like|mention} 
-
 feed--sse while on home page, buffered, no badge
 likes, reposts, retweets of my subscriptions
 feed:uid
 
+notifications---sse until reload, badge
+likes, reposts, retweets of my statuses
+mentions of me
+{status,user,type: like|mention}
 
-expro
+recommended user
+
+- when tweet request
+  - put author_id of viewed tweet that i dont follow && not in blacklist
+- on request
+  - add followings of my followings && not in blacklist

@@ -3,11 +3,16 @@ import type { RedisModuleAsyncOptions } from 'nestjs-redis';
 
 export const redisProvider: RedisModuleAsyncOptions = {
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => ({
-    url: configService.get('REDIS_URL'),
-    retryStrategy(times) {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
+  useFactory: (configService: ConfigService) => [
+    {
+      name: 'users',
+      url: configService.get('REDIS_URL'),
+      db: 0,
     },
-  }),
+    {
+      name: 'statuses',
+      url: configService.get('REDIS_URL'),
+      db: 1,
+    },
+  ],
 };

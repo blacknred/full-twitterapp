@@ -9,7 +9,7 @@ import { RedisAdapter } from './utils/redis.adapter';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  vapidPublicKey: string;
+  // vapidPublicKey: string;
 
   constructor(
     private readonly configService: ConfigService,

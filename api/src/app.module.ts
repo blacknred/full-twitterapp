@@ -1,23 +1,17 @@
 import * as Joi from '@hapi/joi';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RedisModule } from 'nestjs-redis';
-import { AmqpModule } from 'nestjs-amqp';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { AmqpModule } from 'nestjs-amqp';
+import { RedisModule } from 'nestjs-redis';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
-import { LikesModule } from './likes/likes.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
-import { SubscriptionsModule } from './subscriptions/subscriptions.module';
-import { StatusModule } from './statuses/statuses.module';
+import { StatusesModule } from './statuses/statuses.module';
 import { UsersModule } from './users/users.module';
-import { redisProvider } from './__shared__/providers/redis.provider';
 import { queueProvider } from './__shared__/providers/queue.provider';
-import { BansModule } from './bans/bans.module';
-import { StrikesModule } from './strikes/strikes.module';
-import { TrendsService } from './trends/trends.service';
-import { TrendsModule } from './trends/trends.module';
+import { redisProvider } from './__shared__/providers/redis.provider';
 
 @Module({
   imports: [
@@ -31,22 +25,16 @@ import { TrendsModule } from './trends/trends.module';
         SECRET: Joi.string().required(),
       }),
     }),
-    RedisModule.forRootAsync(redisProvider),
-    AmqpModule.forRootAsync(queueProvider),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'documentation'),
       serveRoot: '/docs',
     }),
-    MonitoringModule,
-    AuthModule,
+    RedisModule.forRootAsync(redisProvider),
+    AmqpModule.forRootAsync(queueProvider),
     UsersModule,
-    BansModule,
-    LikesModule,
-    StrikesModule,
-    TrendsModule,
-    //
-    SubscriptionsModule,
-    TweetsModule,
+    StatusesModule,
+    AuthModule,
+    MonitoringModule,
   ],
   providers: [Logger],
 })

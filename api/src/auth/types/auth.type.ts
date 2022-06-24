@@ -1,4 +1,4 @@
-import { User } from 'src/users/types/user.type';
+import { User } from 'src/users/users/types/user.type';
 
 export type PushSubscription = {
   endpoint: string;

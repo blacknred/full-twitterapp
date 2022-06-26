@@ -14,7 +14,7 @@ export class StrikesService {
 
   async create() {
     const client = await this.redisService.getClient('statuses');
-    // strikes:uid sid^createdAt
+    // strikes:sid reason^uid
   }
 
   async findAll() {}

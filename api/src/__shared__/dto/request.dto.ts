@@ -10,7 +10,7 @@ export class SortingDto {
   })
   @Type(() => String)
   @IsIn(['ASC', 'DESC'], { message: 'Must be an ASC or DESC' })
-  sort: 'ASC' | 'DESC';
+  order: 'ASC' | 'DESC';
 }
 
 export class KeysetPaginationDto {

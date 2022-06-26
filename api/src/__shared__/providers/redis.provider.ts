@@ -3,16 +3,12 @@ import type { RedisModuleAsyncOptions } from 'nestjs-redis';
 
 export const redisProvider: RedisModuleAsyncOptions = {
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => [
-    {
-      name: 'users',
+  useFactory: (configService: ConfigService) => {
+    const base = {
       url: configService.get('REDIS_URL'),
-      db: 0,
-    },
-    {
-      name: 'statuses',
-      url: configService.get('REDIS_URL'),
-      db: 1,
-    },
-  ],
+      showFriendlyErrorStack: configService.get('NODE_ENV') !== 'production',
+      enableAutoPipelining: true,
+    };
+    return ['users', 'statuses'].map((name, db) => ({ ...base, name, db }));
+  },
 };

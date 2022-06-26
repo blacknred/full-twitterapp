@@ -25,7 +25,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const client = await this.redisService.getClient('users');
-
+    // client.pipeline().zadd().exec()
     // // unique case: username
     // const { username, email } = createUserDto;
 
@@ -50,16 +50,7 @@ export class UsersService {
     // await this.userRepository.persistAndFlush(user);
 
     // return { data: user };
-
-    // #if email/username are in use
-    // if (conn.get(user:email) || conn.get(user:username)) return Err
-    // #create user & co
-    // id = conn.incr('user:id:')
-    // pipeline.hset('users:username, id)
-    // pipeline.hset('users:email, id)
-    // pipeline.hmset(user:id, {id,username,name,bio,followers:0,following:0,posts:0, createdAt})
-    // pipeline.hmset(user:id:sequred, {email,password}
-    // this.password = await bcrypt.hash(this.password, 8);
+ // this.password = await bcrypt.hash(this.password, 8);
   }
 
   async findAll({ limit, cursor, ...rest }: GetUsersDto) {

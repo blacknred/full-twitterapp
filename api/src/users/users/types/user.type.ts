@@ -4,14 +4,16 @@ export type User = {
   name: string;
   bio?: string;
   img?: string;
-  isAdmin?: boolean;
   createdAt: number;
-  //
   email?: string;
-  followersCnt: number;
-  followingCnt: number;
-  statusesCnt: number;
-  bannedByMe: boolean;
-  followedByMe: boolean;
-  commonFollowingCnt: number;
+  //
+  totalFollowers: number;
+  totalFollowing: number;
+  totalStatuses: number;
+  //
+  relation: {
+    banned: boolean;
+    followed: boolean;
+    totalInterFollowing: number;
+  };
 };

@@ -45,40 +45,168 @@ Monolith boilerplate for Twitter type social network app
 
 ## TODO
 
-- Redis pubsub case?
 - Redis geospatial - local statuses at first?
-- Rabbit request batching?
-- Rabbit schedulling(rabbitmq_delayed_message_exchange):
-  - user hard deleting(time threshold)
-    - pg version: SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
-  - striked statusses(count threshold)
-  - scheduled statuses
-- Custom(redis, rabbit) termius health indicators
+- Rabbit
+  - request batching?
+  - schedulling(rabbitmq_delayed_message_exchange):
+    - user hard deleting(time threshold)
+      - pg version: SELECT * FROM users WHERE deleted_at > NOW() - interval '3 month'
+    - striked statusses(count threshold)
+    - scheduled statuses
+- Termius custom health indicators
+  - redis
+  - rabbit
 
 pagination: createdAt=20045455, limit=20
-sort: sort=ASC|DESC
-filters: ...
+sort: order=ASC|DESC
+filters: uid?, sid?
 
-- monitoring
-- auth
-- users
-  - users
-  - subscriptions
-  - bans
-- statuses
-  - statuses
-  - strikes
-  - likes
-  - feeds
-  - notifications
+function arrayToObject(arr: unknown[]) {
+  const entries: unknown[][] = []
+  for (let i = 0; i < arr.length; i += 2) {
+      entries.push([arr[i], arr[i + 1]])
+  }
+  return Object.fromEntries(entries)
+}
 
-<!-- auth -->
-- DATA
-- API
-  - POST
-    #if deleted then restore user
-    if (conn.zscore(deleted, uid)) conn.zrem(deleted, uid)
-  - GET
+- **monitoring**
+- **auth**
+  - create(email,password)
+    - if (hget())
+    - if (zscore(deletedusers, uid)) && zrem('deletedusers', auid)`
+      - ? zrem(deleted, uid)
+  - findAll
+  - findOne
+  - delete
+- **users**
+  - [users]
+    - _findRelation_(uid,subuid)
+      - `pp.zscore('blacklist:uid', subuid)`
+      - `pp.zscore('following:uid', subuid)`
+      - `pp.zinterstore('interfollowing:uid:subuid' 2 following:uid following:subuid)`
+      - `pp.zcard('interfollowing:uid:subuid')`
+      - `pp.del('interfollowing:uid:subuid')`
+      - `extra = pp.execute()`
+      - `return {banned:extra[0],followed:extra[1],totalInterFollowing:extra[3]}`
+    - create(username,email,name)
+      - `if (hget(userslookup, username) || hget(userslookup, email)) return 409`
+      - `id = incr('status:id:')`
+      - `pp.hset('userslookup', username, id, email, id, idpassword, password, idadmin, false)`
+      - `pp.zadd('users', id, timestamp)`
+      - `pp.hset('user:id', ...{id,username,name,bio,img,email,totalFollowers:0,totalFollowing:0,totalStatuses:0,createdAt})`
+      - `pp.hgetall('user:id')`
+      - `return entriesToObject(pp.execute()[3])`
+    - findAll(auid,limit,order,cursor)
+      - `src = auid === admin ? 'users' : 'recommend:auid'`
+      - `pp.zcard(src)`
+      - `pp.zrange(src, cursor -1 REV? BYSCORE LIMIT 0 limit)`
+      - `[total, ...uids] = pp.execute()`
+      - `items = for uid in uids: this.findOne(uid, auid)` // filter(None, pp.execute())
+      - `return { total, items }`
+    - findOne(uid, auid)
+      - `if (!exists('user:uid')) return 404`
+      - `user = entriesToObject(hgetall('user:uid'))`
+      - `if (uid !== auid)`
+        - `delete user.email`
+        - `user.relation = this.findRelation(auid, uid)`
+      - `return user`
+    - update(auid, data)
+      - `user = this.findOne(auid, auid)`
+      - `hset('user:auid', ...data)`
+      - `return {...user,data}`
+    - delete(auid)
+      - `if (!exists('user:auid')) return 404`
+      - `zadd('deletedusers', auid, timestamp)`
+      - `return true`
+  - [subscriptions]
+    - create
+      -
+      - if (zscore('recommend:uid', uid2))
+        - ? zrem('recommed:uid', uid2)
+    - findAll
+    - findOne
+      -
+      - followedByMe: zscore('following:auid', uid)
+    - delete
+      - strikes
+  - [bans]
+    - create(auid, uid)
+      - `zadd('blacklist:auid', uid, timestamp)`
+    - findAll(auid,limit,order,cursor)
+      - `pp.zcard('blacklist:auid')`
+      - `pp.zrange('blacklist:auid', cursor -1 REV? BYSCORE LIMIT 0 limit`
+      - `[total, ...items] = pp.execute()`
+      - `for id in items: pp.hgetall('user:id')`
+      - `{ total, items: filter(None, pp.execute()) }`
+    - findOne(uid,sid)
+      - `zscore('blacklist:auid', uid)`
+    - delete(auid, sid)
+      - `zrem('blacklist:auid', uid)`
+- **statuses**
+  - [statuses]
+    - _findRelation_()
+      -
+    - create(auid, data:{sid, text, media,,})
+      - `id = incr('status:id:')`
+      - `pp.hincrby('user:auid', totalStatuses, 1)`
+      - `pp.hmset('status:id, ...{id,uid,sid,text,media,createdAt,totalLikes:0,totalRetweets:0,totalReplies:0})`
+      - `pp.hincrby('user:auid, 'totalStatuses')`
+      - `if (sid)`
+        - ``
+      - `pp.execute()`
+
+    parse text for @mentions, #hashes
+    ZSET to store status IDs as ZSET members, with the timestamp
+    - findAll(recommended?)
+    - findOne
+      - hmget('status:sid')
+      - if (zscore('recommend:auid', status.uid))
+        - ? zincrby('recommend:auid', 1, status.uid)
+        - : zadd('recommend:auid', 1, status.uid)
+    - delete(auid, sid)
+      - `if (!exists('status:sid')) return 404`
+      - `uid = hget('status:sid', uid)`
+      - `if (uid !== auid) return 403`
+      - `pp.hrem('status:sid')`
+      - `pp.hincrby('user:auid, 'totalStatuses', -1)`
+      - `pp.zrem('statuses:auid')`
+      - `pp.execute()`
+      - `return true`
+
+  - [strikes]
+    - create(auid, uid, sid, reason?)
+      - `zadd('strikes', reason, sid)`
+    - findAll(uid,sid,limit,order,cursor)
+      - `pp.zcount('strikes:sid')`
+      - `pp.zrange('likes:sid', cursor -1 REV? BYSCORE LIMIT 0 limit`
+      - `[total, ...items] = pp.execute()`
+      - `for id in items: pp.hgetall('status|user:id')`
+      - `{ total, items: filter(None, pp.execute()) }`
+  - [likes]
+    - create(auid, sid)
+      - `pp.zadd('likes:auid', sid, timestamp)`
+      - `pp.zadd('likes:sid', auid, timestamp)`
+      - `pp.execute()`
+    - findAll(uid,sid,limit,order,cursor)
+      - `pp.zcount('likes:uid|sid')`
+      - `pp.zrange('likes:uid|sid', cursor -1 REV? BYSCORE LIMIT 0 limit`
+      - `[total, ...items] = pp.execute()`
+      - `for id in items: pp.hgetall('status|user:id')`
+      - `{ total, items: filter(None, pp.execute()) }`
+    - findOne(uid,sid)
+      - `zscore('likes:sid', uid)`
+    - delete(auid, sid)
+      - `pp.zrem('likes:auid', sid)`
+      - `pp.zrem('likes:sid', auid)`
+      - `pp.execute()`
+  - [feeds] _following activity: likes/reposts/replies_
+    - create(sse(on home page), interval)
+      - avoid in blacklist:uid
+  - [notifications] _me related activity: mentions, likes/reposts/replies_
+    - create(sse(from load), no interval)
+      - avoid in blacklist:uid
+        {status,user,type: like|mention}
+
 
 <!-- statuses -->
 - DATA:
@@ -140,21 +268,8 @@ filters: ...
   - GET
   - DELETE
 
-<!-- feeds -->
-def get_status_messages(conn, uid, timeline='home:', page=1, count=30):
-  statuses = conn.zrevrange('%s%s'%(timeline, uid), (page-1)*count, page*count-1)
-  for id in statuses: pipeline.hgetall('status:%s'%id)
-  <!-- Filter will remove any “missing” status messages that had been prev deleted -->
-  return filter(None, pipeline.execute())
 
-feed--sse while on home page, buffered, no badge
-likes, reposts, retweets of my subscriptions
-feed:uid
 
-notifications---sse until reload, badge
-likes, reposts, retweets of my statuses
-mentions of me
-{status,user,type: like|mention}
 
 recommended user
 

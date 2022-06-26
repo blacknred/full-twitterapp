@@ -8,9 +8,12 @@ export type Status = {
   author: User;
   status?: Status;
   //
-  likesCnt: number;
-  retweetsCnt: number;
-  repostsCnt: number;
-  likedByMe: boolean;
-  retweetedByMe: boolean;
+  totalLikes: number;
+  totalRetweets: number;
+  totalReplies: number;
+  //
+  relation?: {
+    liked: boolean;
+    retweeted: boolean;
+  };
 };

@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsNumberString,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNumberString, IsOptional, IsString } from 'class-validator';
 
 import { PaginatedRequestDto } from '../../../__shared__/dto/request.dto';
 
@@ -23,11 +18,6 @@ export class GetStatusesDto extends PaginatedRequestDto {
   @IsOptional()
   @IsString({ message: 'Must be a string' })
   hash?: string;
-
-  @ApiProperty({ type: 'boolean', example: true })
-  @IsOptional()
-  @IsBoolean({ message: 'Must be a boolean' })
-  trended?: boolean;
 
   // likesCnt,repostsCnt,retweetsCnt
 }

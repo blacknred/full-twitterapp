@@ -14,6 +14,6 @@ export type Status = {
   //
   relation?: {
     liked: boolean;
-    retweeted: boolean;
+    reposted: boolean;
   };
 };

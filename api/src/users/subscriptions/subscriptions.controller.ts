@@ -17,11 +17,11 @@ import {
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { EmptyResponseDto } from 'src/__shared__/dto/response.dto';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
-import { BanResponseDto } from './dto/ban-response.dto';
-import { BansResponseDto } from './dto/bans-response.dto';
-import { CreateBanDto } from './dto/create-ban.dto';
-import { DeleteBanDto } from './dto/delete-ban.dto';
-import { GetBansDto } from './dto/get-bans.dto';
+import { BanResponseDto } from './dto/subscription-response.dto';
+import { BansResponseDto } from './dto/subscriptions-response.dto';
+import { CreateBanDto } from './dto/create-subscription.dto';
+import { DeleteBanDto } from './dto/delete-subscription.dto';
+import { GetBansDto } from './dto/get-subscriptions.dto';
 import { SubscriptionsService } from './subscriptions.service';
 
 @ApiTags('Subscriptions')

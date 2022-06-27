@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { AmqpModule } from 'nestjs-amqp';
 import { RedisModule } from 'nestjs-redis';
 import { join } from 'path';
+import { AdminModule } from './admin/admin.module';
 
 import { AuthModule } from './auth/auth.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
@@ -33,6 +34,7 @@ import { redisProvider } from './__shared__/providers/redis.provider';
     AmqpModule.forRootAsync(queueProvider),
     UsersModule,
     StatusesModule,
+    AdminModule,
     AuthModule,
     MonitoringModule,
   ],

@@ -14,7 +14,6 @@ export class TrendsService {
 
   async create() {
     const client = await this.redisService.getClient('statuses');
-    // trends hash^statuses_cnt <100 cut
   }
 
   async findAll() {}

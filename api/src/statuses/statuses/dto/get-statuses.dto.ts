@@ -17,7 +17,7 @@ export class GetStatusesDto extends PaginatedRequestDto {
   @ApiProperty({ type: 'string', example: 'test' })
   @IsOptional()
   @IsString({ message: 'Must be a string' })
-  hash?: string;
+  tag?: string;
 
   // likesCnt,repostsCnt,retweetsCnt
 }

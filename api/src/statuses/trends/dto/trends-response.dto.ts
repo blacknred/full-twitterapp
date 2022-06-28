@@ -4,7 +4,7 @@ import { PaginatedResponseDto } from '../../../__shared__/dto/response.dto';
 import { Trend } from '../types/trend.type';
 
 export const trendMock: Trend = {
-  hash: 'test',
+  tag: 'test',
   count: 100,
 };
 

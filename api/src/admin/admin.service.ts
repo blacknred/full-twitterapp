@@ -11,13 +11,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  // user:id hash
-  // user:id:secured {email, password}
-  // user:username uid
-  // user:email uid
-  // deleted uid^deletedAt
-  // users uid^deletedAt
-  // recommend:uid uid^createdAt
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,

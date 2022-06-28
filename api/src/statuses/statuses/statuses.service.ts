@@ -14,14 +14,6 @@ export class StatusesService {
 
   async create() {
     const client = await this.redisService.getClient('statuses');
-    // status:id hash
-    // statuses:uid sid^createdAt
-    //
-    // #hashes go to statuses:hash sid^createdAt
-    // @mentions go to notifications:uid sid^createdAt
-    // get followers and enlarge their feed:uid
-    //
-    // retweets:sid sid^createdAt
   }
 
   async findAll() {}

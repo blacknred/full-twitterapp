@@ -9,7 +9,7 @@ export type Status = {
   status?: Status;
   //
   totalLikes: number;
-  totalRetweets: number;
+  totalReposts: number;
   totalReplies: number;
   //
   relation?: {

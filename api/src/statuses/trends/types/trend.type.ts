@@ -1,4 +1,4 @@
 export type Trend = {
-  hash: string;
+  tag: string;
   count: number;
 };

@@ -35,6 +35,24 @@ services:
     healthcheck:
       test: exit 0
 
+  postgres:
+    container_name: postgres
+    build: ./postgres
+    env_file: ./.env.dev
+    restart: always
+    volumes:
+      - "./postgres/data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-test}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-test}
+      - POSTGRES_DB=${POSTGRES_DB:-users_test}
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    healthcheck:
+      test: exit 0
+
   api:
     container_name: api
     hostname: api
@@ -51,10 +69,12 @@ services:
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://:${REDIS_PASSWORD:-test}@redis:6379
+      - PG_URL=postgres://${POSTGRES_USER:-test}:${POSTGRES_PASSWORD:-test}@status-db:5432/${POSTGRES_DB:-status_test}
       - QUEUE_URL=amqp://${RABBITMQ_USER:-test}:${RABBITMQ_PASSWORD:-test}@rabbitmq:5672
       - CLIENT_ORIGIN=${CLIENT_ORIGIN:-http://localhost:3000}
     depends_on:
       - redis
+      - postgres
     ports:
       - "8080:3000"
     networks:

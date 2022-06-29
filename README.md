@@ -6,11 +6,14 @@ Monolith boilerplate for Twitter type social network app
 
 | Services    | Container | Stack                  | Ports |
 | ----------- | --------- | ---------------------- | ----- |
-| Hot DB      | redis     | Redis                  | 6379  |
-| Cold DB     | postgres  | Postgres               | 5432  |
+| Cache       | redis     | Redis                  | 6379  |
+| DB          | postgres* | Postgres               | 5432  |
 | Queue       | rabbitmq  | RabbitMQ               | 5672  |
 | API service | api       | TS, NestJS, Http, REST | 8080  |
 | Web client  | web       | TS, React, Tailwind    | 3000  |
+
+- while microservices may be more convinient for such app, the monolith is an intention simplification
+- *for real world scenario you definitely need an easy sharding nosql db
 
 ## Run the project
 
@@ -48,57 +51,69 @@ Monolith boilerplate for Twitter type social network app
 
 ### Features
 
-- MAIN ENTITIES
+- **CACHE + DB**
 
-  - User. Highly available
-  - Status. Recents are highly available, statuses older than 30d go to cold db
+  - `USER:id`(many reads, allow http cache)
 
-- TRENDS(100, last 24h)
+  - `STATUS:id`(many reads, slow writes)
+  
+    - write
+      - since the statuses are very related to current events, we only need a fast reads for the recent ones
+      - write to cache at first
+      - statuses older than 30d are removed from cache and writed to the cold db with batch inserts
+      - writing to db at first lacks in terms of performance: enlarges creation time, separates inserts, includes deleted during 30d statuses
+    - read: will go to cache at first and to cold db as an fallback
+    - fanout updates
+      - every new status needs to be propagated to followers feeds and if user have too many followers it would be an issue
+      - to non blocking the creation process we will split followers updates by 1k and put their feeds updates to async queue
+      - most users have less than 1k followers and will get updates at once
 
-  - store all tags in _lasttags_ sset with timestamp
-  - store all tags in _trends_ sset with count of usage
-  - every hour
-    - drop all tags in _lasttags_ older than 24h
-    - update _trends_ according with _lasttags_
-  - get trends by score
+  - `LIKES`
 
-- RECOMMENDED:uid(<1000)
+  - `REPORTS`(few reads/writes)
+    - db only since no reads for the main client app
 
-  1. authors I watch/liked/reposted/replied the most that are not on my blacklist
-  2. top 50 recommendations of user I have started following that are not on my blacklist
+- **CACHE ONLY**(temp or many reads/writes)
 
-  - based on my activity and the activity of my following
-  - most likely all these recommendations will be mutual followings and this is ok
-  - the more i active the more recommendations i have
+  - `TRENDS`(100, temp(24h))
 
-- FEED:uid(<1000, following activity)
+    - store all tags in _lasttags_ sset with timestamp
+    - store all tags in _trends_ sset with count of usage
+    - every hour
+      - drop all tags in _lasttags_ older than 24h
+      - update _trends_ according with _lasttags_
+    - get trends by score
 
-  - reposts/replies/likes of my following
-  - top statuses of following feeds
-  - _with every new statuses only first 1k followers get feeds updates, the rest are processed async by rabbitmq_
+  - `RECOMMENDATIONS:uid`(<1000, temp, many writes, allow http cache)
 
-- NOTIFICATIONS:uid(<1000, me related activity)
+    1. users I watch/liked/reposted/replied the most that are not on my blacklist
+    2. top 50 recommendations of user I have started following that are not on my blacklist
 
-  - my @mentions
-  - reposts/replies/likes of my statuses
+    - based on my activity and the activity of my following
+    - most likely all these recommendations will be mutual followings and this is ok
+    - the more i active the more recommendations i have
+
+  - `FOLLOWERS|FOLLOWING:uid`(many reads, allow http cache)
+
+  - `BLACKLIST:uid`(many reads)
+
+  - `FEED:uid`(<1000, temp, many reads/writes)
+
+    - following activity
+      - reposts/replies/likes of my following
+      - top statuses of following feeds
+    - _with every new statuses only first 1k followers get feeds updates, the rest are processed async by rabbitmq_
+
+  - `NOTIFICATIONS:uid`(<1000, temp, many reads/writes)
+
+    - me related activity
+      - my @mentions
+      - reposts/replies/likes of my statuses
 
 ### Api
 
-```ts
-pagination: createdAt=20045455, limit=20
-sort: order=ASC|DESC
-filters: uid?, sid?
-
-function arrayToObject(arr: unknown[]) {
-const entries: unknown[][] = []
-for (let i = 0; i < arr.length; i += 2) {
-entries.push([arr[i], arr[i + 1]])
-}
-return Object.fromEntries(entries)
-}
-```
-
 - **monitoring**
+
 - **auth**
   - create(email,password)
     - if (hget())
@@ -107,10 +122,7 @@ return Object.fromEntries(entries)
   - findAll
   - findOne
   - delete
-- **admin**
-  `admins uid^createdAt`
-  strikes:user:uid
-  strikes:status:sid
+
 - **users**
 
   - *[users]
@@ -122,8 +134,8 @@ return Object.fromEntries(entries)
       - `pp.hgetall(`USER:ID`)`
       - `return entriesToObject(pp.execute()[-1])`
     - findAll(auid, { limit,order,cursor })
-      - `pp.zcard(`RECOMMENDED:AUID`)`
-      - `pp.zrange(`RECOMMENDED:AUID`, cursor -1 REV! BYSCORE LIMIT 0 limit)`
+      - `pp.zcard(`RECOMMENDATIONS:AUID`)`
+      - `pp.zrange(`RECOMMENDATIONS:AUID`, cursor -1 REV! BYSCORE LIMIT 0 limit)`
       - `[total, ...uids] = pp.execute()`
       - `items = for uid in uids: this.findOne(auid,uid,true)`
       - `return { total, items }`
@@ -140,10 +152,10 @@ return Object.fromEntries(entries)
       - `if (!silent)`
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
           - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
-            - `if (pp.zscore(`RECOMMENDED:AUID`, uid))`
-              - ? `pp.zincrby(`RECOMMENDED:AUID`, uid, 1)`
-              - : `pp.zadd(`RECOMMENDED:AUID`, uid, 1)`
-            - `pp.zremrangebyrank(`RECOMMENDED:AUID`, 0, 1000)`
+            - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
+              - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
+              - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
+            - `pp.zremrangebyrank(`RECOMMENDATIONS:AUID`, 0, 1000)`
         - `pp.execute()`
       - `return user`
     - update(auid, { password, ...data })
@@ -178,8 +190,8 @@ return Object.fromEntries(entries)
       - `pp.hincrby(`USER:AUID`, totalFollowing, 1)`
       - `pp.hincrby(`USER:UID`, totalFollowers, 1)`
       - ##drop_from_recommendations##
-      - `if (pp.zscore(`RECOMMENDED:AUID`, uid)`
-        - `pp.zrem(`RECOMMENDED:AUID`, uid)`
+      - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid)`
+        - `pp.zrem(`RECOMMENDATIONS:AUID`, uid)`
       - ##drop_from_blacklist##
       - `if (pp.zscore(`BLACKLIST:AUID`, uid)`
         - `pp.zrem(`BLACKLIST:AUID`, uid)`
@@ -190,14 +202,14 @@ return Object.fromEntries(entries)
       - `pp.zremrangebyrank(`FEED:AUID`, 0, 1000)`
       - `pp.execute()`
       - ##get_top_recommendations_of_following##
-      - `uids = zrange(`RECOMMENDED:AUID`, cursor -1 REV BYSCORE LIMIT 0 50)`
+      - `uids = zrange(`RECOMMENDATIONS:AUID`, cursor -1 REV BYSCORE LIMIT 0 50)`
       - `for uid in uids`
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
           - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
-            - `if (pp.zscore(`RECOMMENDED:AUID`, uid))`
-              - ? `pp.zincrby(`RECOMMENDED:AUID`, uid, 1)`
-              - : `pp.zadd(`RECOMMENDED:AUID`, uid, 1)`
-            - `pp.zremrangebyrank(`RECOMMENDED:AUID`, 0, 1000)`
+            - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
+              - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
+              - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
+            - `pp.zremrangebyrank(`RECOMMENDATIONS:AUID`, 0, 1000)`
       - `pp.execute()`
       - `user = [users].findOne(auid,uid,true)`
       - `return user`
@@ -243,6 +255,15 @@ return Object.fromEntries(entries)
       - `zrem(`BLACKLIST:AUID`, uid)`
       - `return null`
 
+  - *[reports]
+    - create(auid, { uid, sid?, reason? })
+      - `if (!exists(`USER:UID`)) return 409` _no such user_
+      - `if (sid)`
+        - `if (!(exists(`STATUS:SID`))) return 409` _no such status_
+        - `zadd(`REPORTS:STATUS:SID`, reason, sid)`
+      - `zadd(`REPORTS:USER:UID`, reason, sid)`
+      - return {user,status,reason,createdAt:timestamp}
+
 - **statuses**
 
   - [statuses]
@@ -263,10 +284,10 @@ return Object.fromEntries(entries)
         - 
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
           - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
-            - `if (pp.zscore(`RECOMMENDED:AUID`, uid))`
-              - ? `pp.zincrby(`RECOMMENDED:AUID`, uid, 1)`
-              - : `pp.zadd(`RECOMMENDED:AUID`, uid, 1)`
-            - `pp.zremrangebyrank(`RECOMMENDED:AUID`, 0, 1000)`
+            - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
+              - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
+              - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
+            - `pp.zremrangebyrank(`RECOMMENDATIONS:AUID`, 0, 1000)`
       - ##tags##
       - `for #tag in text`
         - `pp.zadd(`STATUSES:TAG:TAG`, id, createdAt)`
@@ -304,18 +325,6 @@ return Object.fromEntries(entries)
       - `pp.execute()`
       - `return null`
   
-  - *[trends]
-    - _trendsMapping(arr: unknown[])_
-      - const results = []
-      - for (let i = 0; i < arr.length; i += 2)
-        - result.push({ tag: arr[i], count: arr[i + 1] })
-      - return result
-    - findAll({ limit,order,cursor })
-      - `pp.zcard(`TRENDS`)`
-      - `pp.zrange(`TRENDS`, cursor -1 REV BYSCORE LIMIT 0 limit WITHSCORES)`
-      - `[total, ...items] = pp.execute()`
-      - `return { total, items: this.trendsMapping(items) }`
-  
   - *[likes]
     - create(auid, sid)
       - `if (!(exists(`STATUS:SID`))) return 409`
@@ -327,10 +336,10 @@ return Object.fromEntries(entries)
       - `status=[status].findOne(auid,sid,true)`
       - `if (!(pp.zscore(`FOLLOWING:AUID`, status.author.id)))`
         - `if (!pp.zscore(`BLACKLIST:AUID`, status.author.id))`
-          - `if (pp.zscore(`RECOMMENDED:AUID`, status.author.id))`
-            - ? `pp.zincrby(`RECOMMENDED:AUID`, status.author.id, 1)`
-            - : `pp.zadd(`RECOMMENDED:AUID`, status.author.id, 1)`
-          - `pp.zremrangebyrank(`RECOMMENDED:AUID`, 0, 1000)`
+          - `if (pp.zscore(`RECOMMENDATIONS:AUID`, status.author.id))`
+            - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, status.author.id, 1)`
+            - : `pp.zadd(`RECOMMENDATIONS:AUID`, status.author.id, 1)`
+          - `pp.zremrangebyrank(`RECOMMENDATIONS:AUID`, 0, 1000)`
       - `pp.execute()`
       - =>>>>>>>>>>>>>> notifications
       - `return {user,status}`
@@ -361,25 +370,30 @@ return Object.fromEntries(entries)
       - `pp.execute()`
       - `return null`
 
+  - *[trends]
+    - _trendsMapping(arr: unknown[])_
+      - const results = []
+      - for (let i = 0; i < arr.length; i += 2)
+        - result.push({ tag: arr[i], count: arr[i + 1] })
+      - return result
+    - findAll({ limit,order,cursor })
+      - `pp.zcard(`TRENDS`)`
+      - `pp.zrange(`TRENDS`, cursor -1 REV BYSCORE LIMIT 0 limit WITHSCORES)`
+      - `[total, ...items] = pp.execute()`
+      - `return { total, items: this.trendsMapping(items) }`
+  
   - [feeds] _following activity: likes/reposts/replies_
     - create(sse(on home page), interval)
       - avoid in blacklist:uid
+  
   - [notifications] _me related activity: mentions, likes/reposts/replies_
     - create(sse(from load), no interval)
       - avoid in blacklist:uid
         {status,user,type: like|mention}
 
-- [strikes]
-  - create(auid, uid, sid, reason?)
-    - `if (uid && !(exists(`USER:UID`))) return 409`
-    - `if (sid && !(exists(`STATUS:SID`))) return 409`
-    - `zadd('strikes', reason, sid)`
-  - findAll(uid,sid,limit,order,cursor)
-    - `pp.zcard('strikes:sid')`
-    - `pp.zrange('likes:sid', cursor -1 REV? BYSCORE LIMIT 0 limit`
-    - `[total, ...items] = pp.execute()`
-    - `for id in items: pp.hgetall('status|user:id')`
-    - `{ total, items: filter(None, pp.execute()) }`
+- **timeline**
+
+  statusEvent stream for feed, notifications, search
 
 ### TODO
 
@@ -387,7 +401,7 @@ return Object.fromEntries(entries)
   - followers feeds update batching. With every new status only the first 1000 followers will gets updates in their feeds immediantly.
     The rest will by batched by 1000 and put to async queue
   - schedulling(rabbitmq_delayed_message_exchange):
-    - every day statuses older than 30d go to postges(cold data)
+    - every day statuses older than 30d go to cold db with bulk inserts
     - every day user hard deleting
       - `userstodelete = zrange(`DELETEDUSERS`, now, -1 REV BYSCORE)`
       - `for uid in userstodelete pp.hrem(`USER:UID`)`
@@ -396,7 +410,7 @@ return Object.fromEntries(entries)
     - every hour trends filter:
       - `pp.zremrangebyscore(`LASTTAGS`, '-inf', now - dayinsec)//cut older than 24h`
       - `pp.zinterscore(`TRENDS`, 2, lasttags, trends)//only lasttags in trends`
-      - `pp.zremrangebyrank(`TRENDS`, 0, 100)`
+      <!-- - `pp.zremrangebyrank(`TRENDS`, 0, 100)` -->
     - scheduled statuses
       - `[statuses].create(auid,data)`
 - Monitoring
@@ -408,8 +422,7 @@ return Object.fromEntries(entries)
 
 
 
-pull service
-push service
+
 
 when users post messages, we’ll PUBLISH the posted message information to a channel in Redis.
 Our filters will SUBSCRIBE to that same channel, receive the message, and yield messages that match the filters back to the web server for sending to the client.
@@ -444,7 +457,7 @@ pubsub.subscribe(['streaming:status:'])
 
 
 
-StatusEvent{type:'posting'|'repost'|'reply'  |'like'|'mention'|'recommended', from:Partial<User>, status:Partial<Status>}
+StatusEvent{type:'posting'|'repost'|'reply'  |'like'|'mention'|'RECOMMENDATIONS', from:Partial<User>, status:Partial<Status>}
 
 
 FeedEvent{status:Status,extra?:'liked/following by :Follower' }
@@ -479,8 +492,6 @@ if uid === auid -> send
   - `notifications:uid sid(@mention,repost,reply)|{uid,sid}{like)` me related activity
 
     {sid,uid,type[like|mention|repost|reply]}
-
-
 
 
     feed:uid = auid

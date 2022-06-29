@@ -29,3 +29,7 @@ export class PaginatedRequestDto extends IntersectionType(
   KeysetPaginationDto,
   SortingDto,
 ) {}
+
+// pagination: createdAt=20045455, limit=20
+// sort: order=ASC|DESC
+// filters: uid?, sid?

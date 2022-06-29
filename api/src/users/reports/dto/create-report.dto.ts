@@ -1,10 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumberString, IsString } from 'class-validator';
+import { IsNumberString, IsOptional, IsString } from 'class-validator';
 
-export class CreateStrikeDto {
+export class CreateReportDto {
   @ApiProperty({ type: 'number', example: 1 })
   @IsNumberString({ message: 'Must be a number' })
-  sid: number;
+  uid: number;
+
+  @ApiProperty({ type: 'number', example: 1 })
+  @IsOptional()
+  @IsNumberString({ message: 'Must be a number' })
+  sid?: number;
 
   @ApiProperty({ type: 'string', example: 'strong reason' })
   @IsString({ message: 'Must be a string' })

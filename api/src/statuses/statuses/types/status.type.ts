@@ -1,4 +1,4 @@
-import { User } from '../../../users/users/types/user.type';
+import type { User } from '../../../users/users/types/user.type';
 
 export type Status = {
   id: number;

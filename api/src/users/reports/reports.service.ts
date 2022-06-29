@@ -4,8 +4,8 @@ import { InjectAmqpConnection } from 'nestjs-amqp';
 import { RedisService } from 'nestjs-redis';
 
 @Injectable()
-export class StrikesService {
-  private readonly logger = new Logger(StrikesService.name);
+export class ReportsService {
+  private readonly logger = new Logger(ReportsService.name);
 
   constructor(
     private readonly redisService: RedisService,

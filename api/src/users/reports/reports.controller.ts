@@ -8,24 +8,24 @@ import {
 } from 'src/__shared__/decorators/with-api.decorator';
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
-import { CreateStrikeDto } from './dto/create-strike.dto';
+import { CreateStrikeDto } from './dto/create-report.dto';
 import { GetStrikesDto } from './dto/get-strikes.dto';
-import { StrikeResponseDto } from './dto/strike-response.dto';
+import { StrikeResponseDto } from './dto/report-response.dto';
 import { StrikesResponseDto } from './dto/strikes-response.dto';
-import { StrikesService } from './strikes.service';
+import { ReportsService } from './reports.service';
 
-@ApiTags('Strikes')
-@Controller('strikes')
+@ApiTags('Reports')
+@Controller('reports')
 @UseFilters(AllExceptionFilter)
-export class StrikesController {
-  constructor(private readonly strikesService: StrikesService) {}
+export class ReportsController {
+  constructor(private readonly reportsService: ReportsService) {}
 
   @Post()
   @WithCreatedApi(StrikeResponseDto, 'Create new strike')
   async create(
     @Body() createStrikeDto: CreateStrikeDto,
   ): Promise<StrikeResponseDto> {
-    return this.strikesService.create(createStrikeDto);
+    return this.reportsService.create(createStrikeDto);
   }
 
   @Get()
@@ -36,6 +36,6 @@ export class StrikesController {
     @Query() getStrikesDto: GetStrikesDto,
   ): Promise<StrikesResponseDto> {
     if (!isAdmin) getStrikesDto.uid = id;
-    return this.strikesService.findAll(getStrikesDto);
+    return this.reportsService.findAll(getStrikesDto);
   }
 }

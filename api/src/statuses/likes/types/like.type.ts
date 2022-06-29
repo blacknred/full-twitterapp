@@ -1,5 +1,5 @@
-import { Status } from '../../statuses/types/status.type';
-import { User } from '../../../users/users/types/user.type';
+import type { Status } from '../../statuses/types/status.type';
+import type { User } from '../../../users/users/types/user.type';
 
 export type Like = {
   user?: User;

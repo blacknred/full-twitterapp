@@ -7,7 +7,7 @@ import { Status } from '../types/status.type';
 export const statusMock: Status = {
   id: 1,
   text: 'testtext',
-  media: ['urltomediafile'],
+  links: ['urltomediafile'],
   author: userMock,
   createdAt: new Date().toDateString(),
   likesCnt: 0,

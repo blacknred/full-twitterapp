@@ -53,9 +53,12 @@ Monolith boilerplate for Twitter type social network app
 
 - **CACHE + DB**
 
-  - `USER:id`(many reads, allow http cache)
+  - `USER:id`(many_reads, http_cache, _USER:ID({id,us,nm,img,ts,tfr,tfg}), DELETEDUSERS(uid)_)
 
-  - `STATUS:id`(many reads, slow writes)
+    - users data are cached except some seldom read/secure fields User{id,bio,email,password}
+    - they are used only for auth, user creation/updation so can be reviewed as few_read_write
+
+  - `STATUS:id`(many_reads, slow_writes, _STATUS:ID({id,txt,lnks,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)_
   
     - write
       - since the statuses are very related to current events, we only need a fast reads for the recent ones
@@ -64,18 +67,13 @@ Monolith boilerplate for Twitter type social network app
       - writing to db at first lacks in terms of performance: enlarges creation time, separates inserts, includes deleted during 30d statuses
     - read: will go to cache at first and to cold db as an fallback
     - fanout updates
-      - every new status needs to be propagated to followers feeds and if user have too many followers it would be an issue
-      - to non blocking the creation process we will split followers updates by 1k and put their feeds updates to async queue
-      - most users have less than 1k followers and will get updates at once
+      - new status needs to be propagated to followers feeds and if user have too many followers it could be an issue
+      - to handle it we use async queue with fanout updates. Every queue task will update feed for the next 1000 followers
+      - most users have less than 1k followers and will get updates at one task
 
-  - `LIKES`
+- **CACHE ONLY**(temp/many_reads_writes)
 
-  - `REPORTS`(few reads/writes)
-    - db only since no reads for the main client app
-
-- **CACHE ONLY**(temp or many reads/writes)
-
-  - `TRENDS`(100, temp(24h))
+  - `TRENDS`(=100, temp(24h), _LASTTAGS(tag), TRENDS(tag)_)
 
     - store all tags in _lasttags_ sset with timestamp
     - store all tags in _trends_ sset with count of usage
@@ -84,7 +82,7 @@ Monolith boilerplate for Twitter type social network app
       - update _trends_ according with _lasttags_
     - get trends by score
 
-  - `RECOMMENDATIONS:uid`(<1000, temp, many writes, allow http cache)
+  - `RECOMMENDATIONS:uid`(<1000, temp, many_writes, http_cache, _RECOMMENDATIONS:UID(uid)_)
 
     1. users I watch/liked/reposted/replied the most that are not on my blacklist
     2. top 50 recommendations of user I have started following that are not on my blacklist
@@ -93,22 +91,28 @@ Monolith boilerplate for Twitter type social network app
     - most likely all these recommendations will be mutual followings and this is ok
     - the more i active the more recommendations i have
 
-  - `FOLLOWERS|FOLLOWING:uid`(many reads, allow http cache)
+  - `FOLLOWERS|FOLLOWING:uid`(many_reads, http_cache, _FOLLOWERS:UID(uid), FOLLOWING:UID(uid)_)
 
-  - `BLACKLIST:uid`(many reads)
+  - `LIKES:uid|sid`(many_reads_writes, _LIKES:USER:UID(sid), LIKES:STATUS:SID(uid)_)
 
-  - `FEED:uid`(<1000, temp, many reads/writes)
+  - `BLACKLIST:uid`(many_reads, _BLACKLIST:UID(uid)_)
+
+  - `FEED:uid`(<1000, temp, many_reads_writes, _FEED:UID(statusevent)_)
 
     - following activity
       - reposts/replies/likes of my following
       - top statuses of following feeds
     - _with every new statuses only first 1k followers get feeds updates, the rest are processed async by rabbitmq_
 
-  - `NOTIFICATIONS:uid`(<1000, temp, many reads/writes)
+  - `NOTIFICATIONS:uid`(<1000, temp, many_reads_writes, _NOTIFICATIONS:UID(statusevent)_)
 
     - me related activity
       - my @mentions
       - reposts/replies/likes of my statuses
+
+- **DB ONLY**(few_reads_writes, non_client_app)
+
+  - `REPORTS`(few_reads_writes, admin_only, _REPORT({id,iud,sid?,reason,createdAt})_)
 
 ### Api
 
@@ -268,6 +272,7 @@ Monolith boilerplate for Twitter type social network app
 
   - [statuses]
     - _findRelation_()
+    - _
     - create(auid, data:{sid, text, media})
       - `id = incr('status:id:')`
       - `pp.hmset(`STATUS:ID`, ...{id,uid,sid,text,media,createdAt,totalLikes:0,totalRetweets:0,totalReplies:0})`
@@ -310,7 +315,7 @@ Monolith boilerplate for Twitter type social network app
       - `status = entriesToObject(hgetall(`STATUS:SID`))`
       - `status.author = [users].findOne(auid, status.uid, true)`
       - `if (status.sid) status.status = this.findOne(auid, status.sid, true)`
-      - `pp.zscore(`LIKES:SID`, auid)`
+      - `pp.zscore(`LIKES:STATUS:SID`, auid)`
       - `pp.zscore(`REPOSTS:SID`, auid)`
       - `[liked, reposted] = pp.execute()`
       - `status.relation = {liked,reposted}`
@@ -383,7 +388,7 @@ Monolith boilerplate for Twitter type social network app
       - `return { total, items: this.trendsMapping(items) }`
   
   - [feeds] _following activity: likes/reposts/replies_
-    - create(sse(on home page), interval)
+    - create()
       - avoid in blacklist:uid
   
   - [notifications] _me related activity: mentions, likes/reposts/replies_
@@ -393,13 +398,12 @@ Monolith boilerplate for Twitter type social network app
 
 - **timeline**
 
+  sse(on home page)
   statusEvent stream for feed, notifications, search
 
 ### TODO
 
 - Rabbit
-  - followers feeds update batching. With every new status only the first 1000 followers will gets updates in their feeds immediantly.
-    The rest will by batched by 1000 and put to async queue
   - schedulling(rabbitmq_delayed_message_exchange):
     - every day statuses older than 30d go to cold db with bulk inserts
     - every day user hard deleting

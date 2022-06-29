@@ -18,10 +18,14 @@
     "test:coverage": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db": "npx mikro-orm migration:create & npx mikro-orm migration:up",
     "docs": "npx @compodoc/compodoc -p tsconfig.json"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
+    "@mikro-orm/core": "^4.5.9",
+    "@mikro-orm/mongodb": "^4.5.9",
+    "@mikro-orm/nestjs": "^4.3.1",
     "@nestjs/common": "^8.0.6",
     "@nestjs/config": "^1.0.1",
     "@nestjs/core": "^8.0.6",
@@ -47,6 +51,8 @@
     "swagger-ui-express": "^4.1.6"
   },
   "devDependencies": {
+    "@mikro-orm/cli": "^5.2.1",
+    "@mikro-orm/migrations": "^5.2.1",
     "@compodoc/compodoc": "^1.1.15",
     "@nestjs/cli": "^8.1.1",
     "@nestjs/schematics": "^8.0.2",
@@ -94,6 +100,12 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./mikro-orm.config.ts"
+    ]
   },
   "husky": {
     "hooks": {

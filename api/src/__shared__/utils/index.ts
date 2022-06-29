@@ -7,3 +7,7 @@ export function arrayToObject(arr: unknown[]) {
 
   return Object.fromEntries(entries);
 }
+
+export function bufferToNumberArray(buf: Buffer) {
+  return buf.toString().split(',').map(Number);
+}

@@ -5,7 +5,7 @@ export const queueProvider: AmqpAsyncOptionsInterface = {
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const { hostname, port, username, password, protocol } = new URL(
-      configService.get('QUEUE_URL'),
+      configService.get('RABBITMQ_URL'),
     );
 
     return {

@@ -27,7 +27,7 @@ export class StatusDto {
   @IsArray({ message: 'Must be an array' })
   @ArrayMaxSize(4)
   @IsString({ message: 'Must includes a strings', each: true })
-  media?: string[];
+  links?: string[];
 
   @ApiProperty({ type: 'number', required: false })
   @IsOptional()

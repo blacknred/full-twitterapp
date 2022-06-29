@@ -30,16 +30,23 @@ async function bootstrap() {
     .addBasicAuth()
     .addBearerAuth()
     .setVersion('1.0')
+    //
     .addTag('Metrics')
     .addTag('Auth')
+    //
     .addTag('Users')
-    .addTag('Statuses')
     .addTag('Subscriptions')
+    .addTag('Bans')
+    .addTag('Reports')
+    //
+    .addTag('Statuses')
     .addTag('Likes')
     .addTag('Trends')
-    .addTag('Recommendations')
-    .addTag('Bans')
-    .addTag('Strikes')
+    .addTag('Feeds')
+    .addTag('Notifications')
+    //
+    .addTag('Timeline')
+    //
     .build();
 
   const document = SwaggerModule.createDocument(app, options);

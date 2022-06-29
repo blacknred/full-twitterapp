@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumberString, IsOptional, IsString } from 'class-validator';
+import {
+  IsNumberString,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateReportDto {
   @ApiProperty({ type: 'number', example: 1 })
@@ -13,5 +18,6 @@ export class CreateReportDto {
 
   @ApiProperty({ type: 'string', example: 'strong reason' })
   @IsString({ message: 'Must be a string' })
+  @MaxLength(500, { message: 'Must include no more than 500 chars' })
   reason: string;
 }

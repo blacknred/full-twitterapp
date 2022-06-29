@@ -1,9 +1,6 @@
-import type { Status } from 'src/statuses/statuses/types/status.type';
-import type { User } from '../../users/types/user.type';
-
 export type Report = {
-  user: User;
-  status?: Status;
+  uid: number;
+  sid?: number;
   reason: string;
-  createdAt: number;
+  createdAt: Date;
 };

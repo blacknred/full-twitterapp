@@ -67,7 +67,7 @@ export class User {
       totalStatuses: user.tss,
 
       //   relation?: {
-      //     banned: boolean;
+      //     blockned: boolean;
       //     followed: boolean;
       //     totalInterFollowing: number;
       //   };

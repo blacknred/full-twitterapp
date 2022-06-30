@@ -13,7 +13,7 @@ export type User = {
   totalStatuses: number;
   //
   relation?: {
-    banned: boolean;
+    blockned: boolean;
     followed: boolean;
     totalInterFollowing: number;
   };

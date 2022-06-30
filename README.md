@@ -1,4 +1,4 @@
-# Twitter
+# TwitterApp
 
 Monolith boilerplate for Twitter type social network app
 
@@ -84,8 +84,8 @@ Monolith boilerplate for Twitter type social network app
 
   - `RECOMMENDATIONS:uid`(<1000, temp, many_writes, http_cache, _RECOMMENDATIONS:UID(uid)_)
 
-    1. users I watch/liked/reposted/replied the most that are not on my blacklist
-    2. top 50 recommendations of user I have started following that are not on my blacklist
+    1. users I watch/liked/reposted/replied the most that are not on my blocklist
+    2. top 50 recommendations of user I have started following that are not on my blocklist
 
     - based on my activity and the activity of my following
     - most likely all these recommendations will be mutual followings and this is ok
@@ -95,7 +95,7 @@ Monolith boilerplate for Twitter type social network app
 
   - `LIKES:uid|sid`(many_reads_writes, _LIKES:USER:UID(sid), LIKES:STATUS:SID(uid)_)
 
-  - `BLACKLIST:uid`(many_reads, _BLACKLIST:UID(uid)_)
+  - `BLOCKLIST:uid`(many_reads, _BLOCKLIST:UID(uid)_)
 
   - `FEED:uid`(<1000, temp, many_reads_writes, _FEED:UID(statusevent)_)
 
@@ -148,14 +148,14 @@ Monolith boilerplate for Twitter type social network app
       - `user = entriesToObject(hgetall(`USER:AUID`))`
       - `if (uid !== auid)`
         - `delete user.email`
-        - `pp.zscore(`BLACKLIST:AUID`, uid)`
+        - `pp.zscore(`BLOCKLIST:AUID`, uid)`
         - `pp.zscore(`FOLLOWING:AUID`, uid)`
         - `pp.zintercard(2 following:auid following:uid)`
-        - `[banned, followed, totalInterFollowing] = pp.execute()`
-        - `user.relation = {banned,followed,totalInterFollowing}`
+        - `[blocked, followed, totalInterFollowing] = pp.execute()`
+        - `user.relation = {blocked,followed,totalInterFollowing}`
       - `if (!silent)`
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
-          - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
+          - `if (!pp.zscore(`BLOCKLIST:AUID`, uid))`
             - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
               - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
               - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
@@ -196,9 +196,9 @@ Monolith boilerplate for Twitter type social network app
       - ##drop_from_recommendations##
       - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid)`
         - `pp.zrem(`RECOMMENDATIONS:AUID`, uid)`
-      - ##drop_from_blacklist##
-      - `if (pp.zscore(`BLACKLIST:AUID`, uid)`
-        - `pp.zrem(`BLACKLIST:AUID`, uid)`
+      - ##drop_from_blocklist##
+      - `if (pp.zscore(`BLOCKLIST:AUID`, uid)`
+        - `pp.zrem(`BLOCKLIST:AUID`, uid)`
       - ##get_following_statuses##
       - `pp.zrevrange(`STATUSES:USER:UID`, 0, 100, withscores)
       - `statuses = pp.execute()[-1]`
@@ -209,7 +209,7 @@ Monolith boilerplate for Twitter type social network app
       - `uids = zrange(`RECOMMENDATIONS:AUID`, cursor -1 REV BYSCORE LIMIT 0 50)`
       - `for uid in uids`
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
-          - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
+          - `if (!pp.zscore(`BLOCKLIST:AUID`, uid))`
             - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
               - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
               - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
@@ -235,28 +235,28 @@ Monolith boilerplate for Twitter type social network app
       - `pp.zrem(`FEED:AUID`, ...statuses)`
       - `return null`
 
-  - *[bans]
+  - *[blocks]
     - create({ auid, uid })
       - `if (!exists(`USER:UID`)) return 409` _no such user_
       - `if (zscore(`DELETEDUSERS`)) return 409` _deleted user_
-      - `if (zscore(`BLACKLIST:AUID`, uid)) return 409` _already blocked_
-      - `zadd(`BLACKLIST:AUID`, uid, timestamp)`
+      - `if (zscore(`BLOCKLIST:AUID`, uid)) return 409` _already blocked_
+      - `zadd(`BLOCKLIST:AUID`, uid, timestamp)`
       - `user = [users].findOne(auid, uid)`
       - `return user`
     - findAll(auid, { limit,order,cursor })
-      - `pp.zcard(`BLACKLIST:AUID`)`
-      - `pp.zrange(`BLACKLIST:AUID`, cursor -1 REV? BYSCORE LIMIT 0 limit`
+      - `pp.zcard(`BLOCKLIST:AUID`)`
+      - `pp.zrange(`BLOCKLIST:AUID`, cursor -1 REV? BYSCORE LIMIT 0 limit`
       - `[total, ...uids] = pp.execute()`
       - `items = for uid in uids: [users].findOne(auid,uid,true)`
       - `return { total, items }`
     <!-- - findOne(auid,uid)
-      - `createdAt = zscore(`BLACKLIST:AUID`, uid)`
+      - `createdAt = zscore(`BLOCKLIST:AUID`, uid)`
       - `if (!createdAt) return 404`
       - `user = [users].findOne(auid, uid, true)`
       - `return { user, createdAt }` -->
     - delete(auid, uid)
-      - `if (!zscore(`BLACKLIST:AUID`, uid)) return 404` _no ban_
-      - `zrem(`BLACKLIST:AUID`, uid)`
+      - `if (!zscore(`BLOCKLIST:AUID`, uid)) return 404` _no block_
+      - `zrem(`BLOCKLIST:AUID`, uid)`
       - `return null`
 
   - *[reports]
@@ -286,7 +286,7 @@ Monolith boilerplate for Twitter type social network app
         - ##recommed_author_of_origin_status##
         - 
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
-          - `if (!pp.zscore(`BLACKLIST:AUID`, uid))`
+          - `if (!pp.zscore(`BLOCKLIST:AUID`, uid))`
             - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid))`
               - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, uid, 1)`
               - : `pp.zadd(`RECOMMENDATIONS:AUID`, uid, 1)`
@@ -304,6 +304,7 @@ Monolith boilerplate for Twitter type social network app
       - ##followers_feeds##
       - `subs`
       - `pp.execute()`
+      - `pp.publish('streaming:status:', JSON.stringify(status))`
       - `return this.findOne(auid, id, true)`
     - findAll(auid,uid?,sid?,tag?,limit,order,cursor)
         uid || sid ||tag || trended
@@ -322,9 +323,11 @@ Monolith boilerplate for Twitter type social network app
       - `if (!exists(`STATUS:SID`)) return 404`
       - `uid = hget(`STATUS:SID`, uid)`
       - `if (uid !== auid) return 403`
-      - `pp.hrem(`STATUS:SID`)`
+      - `pp.delete(`STATUS:SID`)`
       - `pp.hincrby(`USER:AUID`, 'totalStatuses', -1)`
       - `pp.zrem(`STATUSES:AUID`, sid)`
+      - `remove sid from feeds`
+      - `pp.publish('streaming:status:del', JSON.stringify(status))`
       - `pp.execute()`
       - `return null`
   
@@ -338,7 +341,7 @@ Monolith boilerplate for Twitter type social network app
       - `user=[users].findOne(auid,auid)`
       - `status=[status].findOne(auid,sid,true)`
       - `if (!(pp.zscore(`FOLLOWING:AUID`, status.author.id)))`
-        - `if (!pp.zscore(`BLACKLIST:AUID`, status.author.id))`
+        - `if (!pp.zscore(`BLOCKLIST:AUID`, status.author.id))`
           - `if (pp.zscore(`RECOMMENDATIONS:AUID`, status.author.id))`
             - ? `pp.zincrby(`RECOMMENDATIONS:AUID`, status.author.id, 1)`
             - : `pp.zadd(`RECOMMENDATIONS:AUID`, status.author.id, 1)`
@@ -387,11 +390,11 @@ Monolith boilerplate for Twitter type social network app
   
   - [feeds] _following activity: likes/reposts/replies_
     - create()
-      - avoid in blacklist:uid
+      - avoid in blocklist:uid
   
   - [notifications] _me related activity: mentions, likes/reposts/replies_
     - create(sse(from load), no interval)
-      - avoid in blacklist:uid
+      - avoid in blocklist:uid
         {status,user,type: like|mention}
 
 - **firehose**
@@ -424,36 +427,13 @@ Monolith boilerplate for Twitter type social network app
 - Implement feed graph
 
 
-when users post messages, we’ll PUBLISH the posted message information to a channel in Redis.
-Our filters will SUBSCRIBE to that same channel, receive the message, and yield messages that match the filters back to the web server for sending to the client.
 
-pipeline.hmset('status:%s'%id, data)
-pipeline.hincrby('user:%s'%uid, 'posts')
-pipeline.publish('streaming:status:', json.dumps(data))
-
-pipeline.delete(key)
-pipeline.zrem('profile:%s'%uid, status_id)
-pipeline.zrem('home:%s'%uid, status_id)
-pipeline.hincrby('user:%s'%uid, 'posts', -1)
-pipeline.publish('streaming:status:', json.dumps(status))
+'FEED', poling
+'NOTICES', poling
 
 
-pubsub.subscribe(['streaming:status:'])
-  for {channel,message} in pubsub.listen():
-    if decoded.get('deleted'):
-      yield json.dumps({
-          'id': decoded['id'], 'deleted': True})
-    else
-      yield message
-
-  if quit[0]:
-    break
-    If the web server no longer has a connection to the client, stop filtering messages.
-    
- 
-  pubsub.reset()
-
-
+'NOTICE', status.uid === auid
+'QUERY', status.text.includes(query)
 
 
 
@@ -466,32 +446,6 @@ Notification{status:Partial<Status>,event?:{type: 'like/repost/reply/mention', f
 notifications:uid
 
 
-like for my status, repost/reply for my status, mention me
-[queue]
-1. find uid of origin_status/mentioned_user
-2. put StatusEvent in notifications:uid
-3. put StatusEvent in notification_queue:uid
-[pubsub]
-1. find uid of origin_status/mentioned_user
-2. put StatusEvent in notifications:uid
-1. publish [StatusEvent,[uid]] in notifying
-
-sse(auid)
-[queue]
-brpop notification_queue:auid -> send
-[pubsub]
-subscribe notifying message [StatusEvent,[uid]]
-if uid === auid -> send
-
-
-<!-- statuses -->
-
-- DATA:
-
-  - `feed:uid sid|{uid,sid}^createdAt <1000` following activity
-  - `notifications:uid sid(@mention,repost,reply)|{uid,sid}{like)` me related activity
-
-    {sid,uid,type[like|mention|repost|reply]}
 
 
     feed:uid = auid

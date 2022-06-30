@@ -4,7 +4,7 @@ import { userPaginationMock } from 'src/users/users/dto/users-response.dto';
 import type { User } from 'src/users/users/types/user.type';
 import { PaginatedResponseDto } from '../../../__shared__/dto/response.dto';
 
-export class BansResponseDto extends PaginatedResponseDto<User> {
+export class BlocksResponseDto extends PaginatedResponseDto<User> {
   @ApiProperty({ example: userPaginationMock, required: false })
   data?: {
     hasMore: boolean;

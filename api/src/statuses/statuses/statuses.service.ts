@@ -6,7 +6,7 @@ import { InjectAmqpConnection } from 'nestjs-amqp';
 import { RedisService } from 'nestjs-redis';
 
 import { bufferToNumberArray } from 'src/__shared__/utils';
-import { FANOUT_QUEUE } from './const';
+import { FANOUT_QUEUE, FEED_LENGTH } from './const';
 import { Status } from './entities/status.entity';
 
 @Injectable()
@@ -43,17 +43,20 @@ export class StatusesService {
       const cache = this.redisService.getClient('statuses');
       const [uid, sid, ts, idx] = bufferToNumberArray(msg.content);
       const pipe = cache.pipeline();
+      const nextIdx = idx + FEED_LENGTH;
 
-      const uids = await cache.zrange(`FOLLOWERS:${uid}`, idx, idx + 1000);
+      const uids = await cache.zrange(`FOLLOWERS:${uid}`, idx, nextIdx);
 
       for (const id of uids) {
         pipe.zadd(`FEED:${id}`, sid, ts);
+        pipe.zremrangebyrank(`FEED:${id}`, 0, -FEED_LENGTH - 1);
       }
 
       await pipe.exec();
 
-      if (uids.length === 1000) {
-        const args = Buffer.from([uid, sid, ts, idx]);
+      if (uids.length === FEED_LENGTH) {
+        // seems like there are more followers, send next task
+        const args = Buffer.from([uid, sid, ts, nextIdx]);
         this.fanoutQueue.sendToQueue(FANOUT_QUEUE, args, {
           deliveryMode: true,
         });

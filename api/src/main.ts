@@ -36,7 +36,7 @@ async function bootstrap() {
     //
     .addTag('Users')
     .addTag('Subscriptions')
-    .addTag('Bans')
+    .addTag('Blocks')
     .addTag('Reports')
     //
     .addTag('Statuses')

@@ -1,0 +1,1 @@
+export const RECOMMENDATIONS_LENGTH = 1000;

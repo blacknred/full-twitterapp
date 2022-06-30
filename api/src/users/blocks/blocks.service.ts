@@ -6,16 +6,16 @@ import {
 } from '@nestjs/common';
 import { RedisService } from 'nestjs-redis';
 
-import { CreateBanDto } from './dto/create-ban.dto';
-import { GetBansDto } from './dto/get-bans.dto';
+import { CreateBlockDto } from './dto/create-block.dto';
+import { GetBlocksDto } from './dto/get-blocks.dto';
 
 @Injectable()
-export class BansService {
-  private readonly logger = new Logger(BansService.name);
+export class BlocksService {
+  private readonly logger = new Logger(BlocksService.name);
 
   constructor(private readonly redisService: RedisService) {}
 
-  async create({ uid }: CreateBanDto) {
+  async create({ uid }: CreateBlockDto) {
     const cache = this.redisService.getClient('users');
 
     if (!(await cache.exists(`USER:${uid}`))) {
@@ -24,21 +24,21 @@ export class BansService {
       });
     }
 
-    if (!(await cache.exists(`BLACKLIST:${uid}`))) {
+    if (!(await cache.exists(`BLOCKLIST:${uid}`))) {
       throw new ConflictException({
-        errors: [{ field: 'uid', message: 'User already in blacklist' }],
+        errors: [{ field: 'uid', message: 'User already in blocklist' }],
       });
     }
 
-    await cache.zadd(`BLACKLIST:${uid}`, uid, Date.now());
+    await cache.zadd(`BLOCKLIST:${uid}`, uid, Date.now());
 
     return { data: {} };
   }
 
-  async findAll(auid: number, { limit, createdAt, order }: GetBansDto) {
+  async findAll(auid: number, { limit, createdAt, order }: GetBlocksDto) {
     const pipe = this.redisService.getClient('users').pipeline();
     const args = ['LIMIT', '0', `${limit + 1}`] as const;
-    const name = `BLACKLIST:${auid}`;
+    const name = `BLOCKLIST:${auid}`;
 
     pipe.zcard(name);
 
@@ -63,13 +63,13 @@ export class BansService {
   async remove(uid: number) {
     const cache = this.redisService.getClient('users');
 
-    if (!(await cache.exists(`BLACKLIST:${uid}`))) {
+    if (!(await cache.exists(`BLOCKLIST:${uid}`))) {
       throw new NotFoundException({
-        errors: [{ field: 'uid', message: 'User already in blacklist' }],
+        errors: [{ field: 'uid', message: 'User already in BLOCKLIST' }],
       });
     }
 
-    await cache.zrem(`BLACKLIST:${uid}`, uid);
+    await cache.zrem(`BLOCKLIST:${uid}`, uid);
 
     return { data: null };
   }

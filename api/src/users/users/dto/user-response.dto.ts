@@ -14,7 +14,7 @@ export const userMock: User = {
   totalFollowers: 0,
   totalFollowing: 0,
   relation: {
-    banned: false,
+    blockned: false,
     followed: true,
     totalInterFollowing: 4,
   },

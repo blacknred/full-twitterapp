@@ -17,11 +17,11 @@ import {
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { EmptyResponseDto } from 'src/__shared__/dto/response.dto';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
-import { BanResponseDto } from './dto/subscription-response.dto';
-import { BansResponseDto } from './dto/subscriptions-response.dto';
-import { CreateBanDto } from './dto/create-subscription.dto';
-import { DeleteBanDto } from './dto/delete-subscription.dto';
-import { GetBansDto } from './dto/get-subscriptions.dto';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { DeleteSubscriptionDto } from './dto/delete-subscription.dto';
+import { GetSubscriptionsDto } from './dto/get-subscriptions.dto';
+import { SubscriptionResponseDto } from './dto/subscription-response.dto';
+import { SubscriptionsResponseDto } from './dto/subscriptions-response.dto';
 import { SubscriptionsService } from './subscriptions.service';
 
 @ApiTags('Subscriptions')
@@ -31,28 +31,30 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Post()
-  @WithCreatedApi(BanResponseDto, 'Create new ban')
-  async create(@Body() createBanDto: CreateBanDto): Promise<BanResponseDto> {
-    return this.subscriptionsService.create(createBanDto);
+  @WithCreatedApi(SubscriptionResponseDto, 'Create new subscription')
+  async create(
+    @Body() createSubscriptionDto: CreateSubscriptionDto,
+  ): Promise<SubscriptionResponseDto> {
+    return this.subscriptionsService.create(createSubscriptionDto);
   }
 
   @Get()
   @WithAuth()
-  @WithOkApi(BansResponseDto, 'List all bans of authorized user')
+  @WithOkApi(SubscriptionsResponseDto, 'List all blocks of authorized user')
   async getAll(
-    @Auth('user') { id: uid },
-    @Query() getBansDto: GetBansDto,
-  ): Promise<BansResponseDto> {
-    return this.subscriptionsService.findAll({ uid, ...getBansDto });
+    @Auth('user') { uid },
+    @Query() getSubscriptionsDto: GetSubscriptionsDto,
+  ): Promise<SubscriptionsResponseDto> {
+    return this.subscriptionsService.findAll(uid, getSubscriptionsDto);
   }
 
   @Delete()
   @WithAuth()
-  @WithOkApi(EmptyResponseDto, 'Delete ban')
+  @WithOkApi(EmptyResponseDto, 'Delete block')
   async remove(
-    @Auth('user') { id },
-    @Body() deleteBanDto: DeleteBanDto,
+    @Auth('user') { uid },
+    @Body() deleteSubscriptionDto: DeleteSubscriptionDto,
   ): Promise<EmptyResponseDto> {
-    return this.subscriptionsService.remove(id, deleteBanDto);
+    return this.subscriptionsService.remove(uid, deleteSubscriptionDto);
   }
 }

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumberString } from 'class-validator';
 
-export class DeleteBanDto {
+export class CreateBlockDto {
   @ApiProperty({ type: 'number', example: 1 })
   @IsNumberString({ message: 'Must be a number' })
   uid: number;

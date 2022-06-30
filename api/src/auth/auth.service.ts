@@ -22,48 +22,4 @@ export class AuthService {
     const data = { ...auth, vapidPublicKey: this.vapidPublicKey };
     return { data };
   }
-
-  async findAll({ limit = 10, offset = 0, ...rest }: GetAuthsDto) {
-    // TODO: list all sessions
-    // 1. ZRANGE with sorted sets
-    // --scan --pattern 'abc:*'
-    const total = await this.cacheService.dbsizeAsync();
-    const [cursor, items] = await this.cacheService.scanAsync(+offset, [
-      'COUNT',
-      `${limit}`,
-      'MATCH',
-      'sess:*',
-    ]);
-
-    return {
-      data: { hasMore: cursor > 0, total, items },
-    };
-  }
-
-  createPush(
-    subscriptions: IPushSubscription[],
-    subscriptionDto: PushSubscriptionDto,
-  ) {
-    const dto = JSON.stringify(subscriptionDto);
-
-    if (subscriptions.every((sub) => JSON.stringify(sub) !== dto)) {
-      subscriptions.push(subscriptionDto);
-    }
-
-    return { data: subscriptionDto };
-  }
-
-  deletePush(
-    subscriptions: IPushSubscription[],
-    subscriptionDto: PushSubscriptionDto,
-  ) {
-    const dto = JSON.stringify(subscriptionDto);
-    const index = subscriptions.findIndex((sub) => JSON.stringify(sub) === dto);
-
-    if (index > -1) {
-      subscriptions.splice(index, 1);
-    }
-
-    return { data: null };
-  }
 }

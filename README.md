@@ -55,17 +55,17 @@ Monolith boilerplate for Twitter type social network app
 
   - `USER:id`(many_reads, http_cache, _USER:ID({id,us,nm,img,ts,tfr,tfg}), DELETEDUSERS(uid)_)
 
-    - users data are cached except some seldom read/secure fields User{id,bio,email,password}
-    - they are used only for auth, user creation/updation so can be reviewed as few_read_write
+    - user data are splitted by frequency of use
+      - cache layer is many_reads_writes: USER:ID({id,us,nm,img,ts,tfr,tfg})
+      - db layer is used only for auth, user mutations and seldom queries: User{id,bio,email,password}
 
   - `STATUS:id`(many_reads, slow_writes, _STATUS:ID({id,txt,lnks,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)_
   
-    - write
-      - since the statuses are very related to current events, we only need a fast reads for the recent ones
-      - write to cache at first
-      - statuses older than 30d are removed from cache and writed to the cold db with batch inserts
-      - writing to db at first lacks in terms of performance: enlarges creation time, separates inserts, includes deleted during 30d statuses
-    - read: will go to cache at first and to cold db as an fallback
+    - statuses are splitted by relevance(statuses are very related to current events, we only need a fast_reads for the recent ones)
+      - cache layer: all new statuses
+      - db layer: statuses older than 30d are removed from cache and archived to the cold db with batch inserts
+        - writing to db at first lacks in terms of performance: enlarges creation time, separates inserts, includes deleted during 30d statuses
+        - read will go to cache at first and to cold db as an fallback
     - fanout updates
       - new status needs to be propagated to followers feeds and if user have too many followers it could be an issue
       - to handle it we use async queue with fanout updates. Every queue task will update feed for the next 1000 followers
@@ -262,10 +262,8 @@ Monolith boilerplate for Twitter type social network app
   - *[reports]
     - create(auid, { uid, sid?, reason? })
       - `if (!exists(`USER:UID`)) return 409` _no such user_
-      - `if (sid)`
-        - `if (!(exists(`STATUS:SID`))) return 409` _no such status_
-        - `zadd(`REPORTS:STATUS:SID`, reason, sid)`
-      - `zadd(`REPORTS:USER:UID`, reason, sid)`
+      - `if (sid && !(exists(`STATUS:SID`))) return 409` _no such status_
+      - `db.create(`REPORTS`, reason, sid, uid)`
       - return {user,status,reason,createdAt:timestamp}
 
 - **statuses**
@@ -396,7 +394,7 @@ Monolith boilerplate for Twitter type social network app
       - avoid in blacklist:uid
         {status,user,type: like|mention}
 
-- **timeline**
+- **firehose**
 
   sse(on home page)
   statusEvent stream for feed, notifications, search
@@ -419,7 +417,7 @@ Monolith boilerplate for Twitter type social network app
       - `[statuses].create(auid,data)`
 - Monitoring
   - Termius custom health indicators for redis, rabbit
-  - Prometheus redis stats
+  - Prometheus redis & rabbitmq stats
 - Redis
   - geospatial - feed local statuses at first?
   - Search API?

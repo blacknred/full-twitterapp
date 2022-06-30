@@ -10,7 +10,7 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { StatusesModule } from './statuses/statuses.module';
-import { TimelineModule } from './timeline/timeline.module';
+import { FirehoseModule } from './firehose/firehose.module';
 import { UsersModule } from './users/users.module';
 import { queueProvider } from './__shared__/providers/queue.provider';
 import { redisProvider } from './__shared__/providers/redis.provider';
@@ -38,7 +38,7 @@ import { databaseProvider } from './__shared__/providers/database.provider';
     AmqpModule.forRootAsync(queueProvider),
     UsersModule,
     StatusesModule,
-    TimelineModule,
+    FirehoseModule,
     AuthModule,
     MonitoringModule,
   ],

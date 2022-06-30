@@ -43,16 +43,13 @@ export class BansController {
     @Auth('user') { id: uid },
     @Query() getBansDto: GetBansDto,
   ): Promise<BansResponseDto> {
-    return this.bansService.findAll({ uid, ...getBansDto });
+    return this.bansService.findAll(uid, getBansDto);
   }
 
   @Delete()
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete ban')
-  async remove(
-    @Auth('user') { id },
-    @Body() deleteBanDto: DeleteBanDto,
-  ): Promise<EmptyResponseDto> {
-    return this.bansService.remove(id, deleteBanDto);
+  async remove(@Body() { uid }: DeleteBanDto): Promise<EmptyResponseDto> {
+    return this.bansService.remove(uid);
   }
 }

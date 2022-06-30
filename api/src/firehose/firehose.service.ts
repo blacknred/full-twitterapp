@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from 'nestjs-redis';
 
 @Injectable()
-export class TimelineService {
-  private readonly logger = new Logger(TimelineService.name);
+export class FirehoseService {
+  private readonly logger = new Logger(FirehoseService.name);
 
   constructor(private readonly redisService: RedisService) {}
 

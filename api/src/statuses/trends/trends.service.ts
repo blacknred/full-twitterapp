@@ -10,11 +10,12 @@ export class TrendsService {
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,
-  ) {}
-
-  async create() {
-    const client = await this.redisService.getClient('statuses');
+  ) {
+    // TODO: hourly old trends filter with rabbitmq_delayed_message_exchange
   }
 
-  async findAll() {}
+  async findAll() {
+    const pipe = await this.redisService.getClient('statuses').pipeline();
+    
+  }
 }

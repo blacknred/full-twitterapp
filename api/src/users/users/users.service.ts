@@ -1,3 +1,5 @@
+import { EntityRepository } from '@mikro-orm/core';
+import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Connection } from 'amqplib';
 import { InjectAmqpConnection } from 'nestjs-amqp';
@@ -6,6 +8,7 @@ import { RedisService } from 'nestjs-redis';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +17,8 @@ export class UsersService {
   constructor(
     private readonly redisService: RedisService,
     @InjectAmqpConnection() private readonly queueService: Connection,
+    @InjectRepository(User)
+    private userRepository: EntityRepository<User>,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -43,7 +48,7 @@ export class UsersService {
     // await this.userRepository.persistAndFlush(user);
 
     // return { data: user };
- // this.password = await bcrypt.hash(this.password, 8);
+    // this.password = await bcrypt.hash(this.password, 8);
   }
 
   async findAll({ limit, cursor, ...rest }: GetUsersDto) {
@@ -110,10 +115,32 @@ export class UsersService {
     // res.data.deletedAt = new Date();
     // await this.userRepository.persistAndFlush(res.data);
     // return { data: null };
-
     // #if user not exists
     // if (conn.zscore(deleted, uid)) return Err
     // #soft delete user
     // conn.zadd(deleted,uid,now())
   }
 }
+
+// async create(createReportDto: CreateReportDto) {
+//   const cache = this.redisService.getClients();
+
+//   const { uid, sid } = createReportDto;
+
+//   if (!(await cache.get('users').exists(`USER:${uid}`))) {
+//     throw new ConflictException({
+//       errors: [{ field: 'uid', message: 'User not exists' }],
+//     });
+//   }
+
+//   if (sid && !(await cache.get('statuses').exists(`STATUS:${sid}`))) {
+//     throw new ConflictException({
+//       errors: [{ field: 'sid', message: 'Status not exists' }],
+//     });
+//   }
+
+//   const report = new Report(createReportDto);
+//   await this.reportRepository.persistAndFlush(report);
+
+//   return { data: report };
+// }

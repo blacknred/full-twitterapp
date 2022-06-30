@@ -45,7 +45,7 @@ async function bootstrap() {
     .addTag('Feeds')
     .addTag('Notifications')
     //
-    .addTag('Timeline')
+    .addTag('Firehose')
     //
     .build();
 

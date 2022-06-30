@@ -17,18 +17,17 @@ export class ReportsService {
   ) {}
 
   async create(createReportDto: CreateReportDto) {
-    const users = await this.redisService.getClient('users');
-    const statuses = await this.redisService.getClient('statuses');
+    const cache = this.redisService.getClients();
 
     const { uid, sid } = createReportDto;
 
-    if (!(await users.exists(`USER:${uid}`))) {
+    if (!(await cache.get('users').exists(`USER:${uid}`))) {
       throw new ConflictException({
         errors: [{ field: 'uid', message: 'User not exists' }],
       });
     }
 
-    if (sid && !(await statuses.exists(`STATUS:${sid}`))) {
+    if (sid && !(await cache.get('statuses').exists(`STATUS:${sid}`))) {
       throw new ConflictException({
         errors: [{ field: 'sid', message: 'Status not exists' }],
       });

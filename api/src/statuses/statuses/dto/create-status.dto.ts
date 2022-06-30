@@ -1,16 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsDateString,
   IsNumberString,
   IsOptional,
   IsString,
   MaxLength,
-  ValidateNested,
 } from 'class-validator';
 
-export class StatusDto {
+export class CreateStatusDto {
   @ApiProperty({ type: 'string', required: false })
   @IsOptional()
   @IsString({ message: 'Must be a string' })
@@ -33,15 +32,9 @@ export class StatusDto {
   @IsOptional()
   @IsNumberString({ message: 'Must be a number' })
   sid?: number;
-}
 
-export class CreateStatusDto {
-  @ApiProperty({
-    type: StatusDto,
-    isArray: true,
-  })
-  @IsArray({ message: 'Must be an array' })
-  @ValidateNested({ each: true })
-  @Type(() => StatusDto)
-  statuses: StatusDto[];
+  @ApiProperty({ type: 'number', required: false })
+  @IsOptional()
+  @IsDateString(null, { message: 'Must be a date string' })
+  createAt?: string;
 }

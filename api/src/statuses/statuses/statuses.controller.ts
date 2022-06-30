@@ -18,6 +18,8 @@ import {
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { EmptyResponseDto } from 'src/__shared__/dto/response.dto';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
+import { CreateStatusDto } from './dto/create-status.dto';
+import { CreateStatusesDto } from './dto/create-statuses.dto';
 import { DeleteStatusDto } from './dto/delete-status.dto';
 import { GetStatusDto } from './dto/get-status.dto';
 import { GetStatusesDto } from './dto/get-statuses.dto';
@@ -39,6 +41,14 @@ export class StatusesController {
     return this.statusesService.create(createStatusDto);
   }
 
+  @Post('bulk')
+  @WithCreatedApi(StatusResponseDto, 'Create new statuses')
+  async createBulk(
+    @Body() createStatusDto: CreateStatusesDto,
+  ): Promise<[StatusResponseDto]> {
+    return this.statusesService.create(createStatusDto);
+  }
+
   @Get()
   @WithAuth()
   @WithOkApi(StatusesResponseDto, 'List all statuses')
@@ -46,7 +56,7 @@ export class StatusesController {
     @Auth('user') { isAdmin },
     @Query() getStatusesDto: GetStatusesDto,
   ): Promise<StatusesResponseDto> {
-    if (!isAdmin) getStatusesDto.trended = true;
+    // if (!isAdmin) getStatusesDto.trended = true;
     return this.statusesService.findAll(getStatusesDto);
   }
 

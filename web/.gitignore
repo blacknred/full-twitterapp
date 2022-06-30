@@ -1,0 +1,36 @@
+
+# dependencies
+/node_modules
+.nyc_output/
+/.pnp
+.pnp.js
+.cache/
+
+# testing
+/coverage
+
+# production
+/build
+dist/*
+!dist/index.html
+cypress/videos/
+cypress/fixtures/
+cypress/screenshots/
+
+# misc
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# debug
+*.log*
+
+# local env files
+.env.local
+.env.development.local
+.env.dev.local
+.env.production.local

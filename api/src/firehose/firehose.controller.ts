@@ -10,6 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Observable } from 'rxjs';
 
+import { Auth } from 'src/__shared__/decorators/auth.decorator';
 import { WithOkApi } from 'src/__shared__/decorators/with-api.decorator';
 import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
@@ -26,23 +27,19 @@ export class FirehoseController {
   @WithAuth()
   @WithOkApi(null, 'Listen firehose')
   sse(
+    @Auth() { uid },
     @Res() res: Response,
     @Query() sseFirehoseDto: SseFirehoseDto,
   ): Observable<MessageEvent> {
-    return this.firehoseService.intercept(res, sseFirehoseDto);
+    return this.firehoseService.intercept(res, uid, sseFirehoseDto);
+
+    //   const subject$ = new Subject();
+    //   this.firehoseService.on('status', (data) => {
+    //     // if (sseQuery.email !== data.email) return;
+    //     subject$.next({ isVerifiedFilter: true });
+    //   });
+    //   return subject$.pipe(
+    //     map((data: MessageEventData): MessageEvent => ({ data })),
+    //   );
   }
-
-  // @Sse('sse')
-  // sse1(@Query() sseQuery: SseFirehoseDto): Observable<MessageEvent> {
-  //   const subject$ = new Subject();
-
-  //   this.firehoseService.on('status', (data) => {
-  //     // if (sseQuery.email !== data.email) return;
-  //     subject$.next({ isVerifiedFilter: true });
-  //   });
-
-  //   return subject$.pipe(
-  //     map((data: MessageEventData): MessageEvent => ({ data })),
-  //   );
-  // }
 }

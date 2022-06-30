@@ -4,8 +4,6 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Connection } from 'amqplib';
-import { InjectAmqpConnection } from 'nestjs-amqp';
 import { RedisService } from 'nestjs-redis';
 
 import { CreateBanDto } from './dto/create-ban.dto';
@@ -15,34 +13,31 @@ import { GetBansDto } from './dto/get-bans.dto';
 export class BansService {
   private readonly logger = new Logger(BansService.name);
 
-  constructor(
-    private readonly redisService: RedisService,
-    @InjectAmqpConnection() private readonly queueService: Connection,
-  ) {}
+  constructor(private readonly redisService: RedisService) {}
 
   async create({ uid }: CreateBanDto) {
-    const users = this.redisService.getClient('users');
+    const cache = this.redisService.getClient('users');
 
-    if (!(await users.exists(`USER:${uid}`))) {
+    if (!(await cache.exists(`USER:${uid}`))) {
       throw new ConflictException({
         errors: [{ field: 'uid', message: 'User not exists' }],
       });
     }
 
-    if (!(await users.exists(`BLACKLIST:${uid}`))) {
+    if (!(await cache.exists(`BLACKLIST:${uid}`))) {
       throw new ConflictException({
         errors: [{ field: 'uid', message: 'User already in blacklist' }],
       });
     }
 
-    await users.zadd(`BLACKLIST:${uid}`, uid, Date.now());
+    await cache.zadd(`BLACKLIST:${uid}`, uid, Date.now());
 
     return { data: {} };
   }
 
   async findAll(auid: number, { limit, createdAt, order }: GetBansDto) {
     const pipe = this.redisService.getClient('users').pipeline();
-    const args = ['LIMIT', '0', `${limit}`] as const;
+    const args = ['LIMIT', '0', `${limit + 1}`] as const;
     const name = `BLACKLIST:${auid}`;
 
     pipe.zcard(name);
@@ -54,21 +49,27 @@ export class BansService {
     }
 
     const [total, ...uids] = await pipe.exec();
-    const items = await Promise.allSettled(uids.map((uid) => {}));
+    const items = await Promise.allSettled(uids.map(([, uid]) => {}));
 
-    return { data: { total, items } };
+    return {
+      data: {
+        total: total[1],
+        items: items.slice(0, limit),
+        hasMore: items.length === limit + 1,
+      },
+    };
   }
 
   async remove(uid: number) {
-    const users = this.redisService.getClient('users');
+    const cache = this.redisService.getClient('users');
 
-    if (!(await users.exists(`BLACKLIST:${uid}`))) {
+    if (!(await cache.exists(`BLACKLIST:${uid}`))) {
       throw new NotFoundException({
         errors: [{ field: 'uid', message: 'User already in blacklist' }],
       });
     }
 
-    await users.zrem(`BLACKLIST:${uid}`, uid);
+    await cache.zrem(`BLACKLIST:${uid}`, uid);
 
     return { data: null };
   }

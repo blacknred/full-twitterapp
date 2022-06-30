@@ -12,11 +12,7 @@ export class SubscriptionsService {
     @InjectAmqpConnection() private readonly queueService: Connection,
   ) {}
 
-  async create() {
-    const client = await this.redisService.getClient('users');
-    // followers:uid uid^createdAt
-    // following:uid uid^createdAt
-  }
+  async create() {}
 
   async findAll() {}
 

@@ -53,10 +53,10 @@ Monolith boilerplate for Twitter type social network app
 
 - **CACHE + DB**
 
-  - `USER:id`(many_reads, http_cache, _USER:ID({id,us,nm,img,ts,tfr,tfg}), DELETEDUSERS(uid)_)
+  - `USER:id`(many_reads, http_cache, _USER:ID({id,us,nm,img,ts,tss,tfr,tfg}), DELETEDUSERS(uid)_)
 
     - user data are splitted by frequency of use
-      - cache layer is many_reads_writes: USER:ID({id,us,nm,img,ts,tfr,tfg})
+      - cache layer is many_reads_writes: USER:ID({id,us,nm,img,ts,tss,tfr,tfg})
       - db layer is used only for auth, user mutations and seldom queries: User{id,bio,email,password}
 
   - `STATUS:id`(many_reads, slow_writes, _STATUS:ID({id,txt,lnks,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)_
@@ -421,9 +421,7 @@ Monolith boilerplate for Twitter type social network app
 - Redis
   - geospatial - feed local statuses at first?
   - Search API?
-
-
-
+- Implement feed graph
 
 
 when users post messages, we’ll PUBLISH the posted message information to a channel in Redis.

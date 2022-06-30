@@ -1,3 +1,3 @@
-import { KeysetPaginationDto } from '../../../__shared__/dto/request.dto';
+import { PaginatedRequestDto } from '../../../__shared__/dto/request.dto';
 
-export class GetTrendsDto extends KeysetPaginationDto {}
+export class GetTrendsDto extends PaginatedRequestDto {}

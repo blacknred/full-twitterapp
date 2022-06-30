@@ -8,7 +8,6 @@ export class FirehoseService {
   constructor(private readonly redisService: RedisService) {}
 
   async create() {
-    const client = await this.redisService.getClient('statuses');
-    // blacklist:uid uid^createdAt
+    const client = this.redisService.getClient('statuses');
   }
 }

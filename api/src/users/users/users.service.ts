@@ -1,6 +1,6 @@
 import { EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { Connection } from 'amqplib';
 import { InjectAmqpConnection } from 'nestjs-amqp';
 import { RedisService } from 'nestjs-redis';
@@ -19,39 +19,40 @@ export class UsersService {
     @InjectAmqpConnection() private readonly queueService: Connection,
     @InjectRepository(User)
     private userRepository: EntityRepository<User>,
-  ) {}
-
-  async create(createUserDto: CreateUserDto) {
-    const client = await this.redisService.getClient('users');
-    // client.pipeline().zadd().exec()
-    // // unique case: username
-    // const { username, email } = createUserDto;
-
-    // if (username) {
-    //   if (await this.userRepository.findOne({ username })) {
-    //     throw new ConflictException({
-    //       errors: [{ field: 'username', message: 'Username allready in use' }],
-    //     });
-    //   }
-    // }
-
-    // // unique case: email
-    // if (email) {
-    //   if (await this.userRepository.findOne({ email })) {
-    //     throw new ConflictException({
-    //       errors: [{ field: 'email', message: 'Email allready in use' }],
-    //     });
-    //   }
-    // }
-
-    // const user = new User(createUserDto);
-    // await this.userRepository.persistAndFlush(user);
-
-    // return { data: user };
-    // this.password = await bcrypt.hash(this.password, 8);
+  ) {
+    // TODO: daily remove deleted more than 3month ago users with rabbitmq_delayed_message_exchange
   }
 
-  async findAll({ limit, cursor, ...rest }: GetUsersDto) {
+  async create(createUserDto: CreateUserDto) {
+    const cache = await this.redisService.getClient('users');
+    const { username, email } = createUserDto;
+
+    if (username) {
+      if (await this.userRepository.findOne({ username })) {
+        throw new ConflictException({
+          errors: [{ field: 'username', message: 'Username allready in use' }],
+        });
+      }
+    }
+
+    if (email) {
+      if (await this.userRepository.findOne({ email })) {
+        throw new ConflictException({
+          errors: [{ field: 'email', message: 'Email allready in use' }],
+        });
+      }
+    }
+
+    const user = new User(createUserDto);
+    user.id = await cache.incr(`USER:ID`);
+
+    await cache.hmset(`USER:${user.id}`, ...user);
+    await this.userRepository.persistAndFlush(user);
+
+    return { data: user.toObject() };
+  }
+
+  async findAll(auid: number, { limit, cursor, order }: GetUsersDto) {
     // const sortField = rest['sort.field'] || 'id';
     // const sortOrder = rest['sort.order'] || 'ASC';
     // const _where = { deletedAt: null };
@@ -81,66 +82,53 @@ export class UsersService {
     // return { data };
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    // const res = await this.findOne(id);
-    // const { username, email } = updateUserDto;
-    // // unique case: username
-    // if (username) {
-    //   if (await this.userRepository.findOne({ username })) {
-    //     throw new ConflictException({
-    //       errors: [{ field: 'username', message: 'Username allready in use' }],
-    //     });
-    //   }
-    // }
-    // // unique case: email
-    // if (email) {
-    //   if (await this.userRepository.findOne({ email })) {
-    //     throw new ConflictException({
-    //       errors: [{ field: 'email', message: 'Email allready in use' }],
-    //     });
-    //   }
-    // }
-    // // password case
-    // if (updateUserDto.password) {
-    //   res.data.password = updateUserDto.password;
-    //   await res.data.hashPassword();
-    // }
+  async update(auid: number, updateUserDto: UpdateUserDto) {
+    const cache = this.redisService.getClient('users');
+    const { username, email, password } = updateUserDto;
+
+    if (!(await cache.exists(`USER:${auid}`))) {
+      throw new ConflictException({
+        errors: [{ field: 'uid', message: 'User not exists' }],
+      });
+    }
+
+    if (username) {
+      if (await this.userRepository.findOne({ username })) {
+        throw new ConflictException({
+          errors: [{ field: 'username', message: 'Username allready in use' }],
+        });
+      }
+    }
+
+    if (email) {
+      if (await this.userRepository.findOne({ email })) {
+        throw new ConflictException({
+          errors: [{ field: 'email', message: 'Email allready in use' }],
+        });
+      }
+    }
+
+    // password case
+    if (updateUserDto.password) {
+      res.data.password = updateUserDto.password;
+      await res.data.hashPassword();
+    }
     // this.userRepository.assign(res.data, updateUserDto);
     // await this.userRepository.persistAndFlush(res.data);
     // return { data: res.data };
   }
 
-  async remove(id: number) {
-    // const res = await this.findOne(id);
-    // res.data.deletedAt = new Date();
-    // await this.userRepository.persistAndFlush(res.data);
-    // return { data: null };
-    // #if user not exists
-    // if (conn.zscore(deleted, uid)) return Err
-    // #soft delete user
-    // conn.zadd(deleted,uid,now())
+  async remove(auid: number) {
+    const cache = this.redisService.getClient('users');
+
+    if (!(await cache.zscore(`DELETEDUSERS`, `${auid}`))) {
+      throw new ConflictException({
+        errors: [{ field: 'uid', message: 'User already deleted' }],
+      });
+    }
+
+    await cache.zadd(`DELETEDUSERS`, auid, Date.now());
+
+    return { data: null };
   }
 }
-
-// async create(createReportDto: CreateReportDto) {
-//   const cache = this.redisService.getClients();
-
-//   const { uid, sid } = createReportDto;
-
-//   if (!(await cache.get('users').exists(`USER:${uid}`))) {
-//     throw new ConflictException({
-//       errors: [{ field: 'uid', message: 'User not exists' }],
-//     });
-//   }
-
-//   if (sid && !(await cache.get('statuses').exists(`STATUS:${sid}`))) {
-//     throw new ConflictException({
-//       errors: [{ field: 'sid', message: 'Status not exists' }],
-//     });
-//   }
-
-//   const report = new Report(createReportDto);
-//   await this.reportRepository.persistAndFlush(report);
-
-//   return { data: report };
-// }

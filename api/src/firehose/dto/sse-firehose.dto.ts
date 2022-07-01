@@ -20,7 +20,7 @@ export class SseFirehoseDto {
     },
     {
       message:
-        'Param must be a sample, mention with related uid or track with q field',
+        'Param must be a "sample", "mention" with "uid" or "track" with "q"',
     },
   )
   filter: 'sample' | 'mention' | 'track';

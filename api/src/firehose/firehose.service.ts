@@ -30,12 +30,12 @@ export class FirehoseService {
     return new Observable<MessageEvent>((subscriber) => {
       const redis = this.redisService.getClient('statuses');
 
-      redis.hset(`USER:${auid}`, { firehose: 'true' });
+      redis.zadd('FIREHOSE', auid, Date.now());
       redis.subscribe([STATUS_EVENT_STREAM]);
 
       res.on('close', () => {
         redis.unsubscribe();
-        redis.hset(`USER:${auid}`, { firehose: 'false' });
+        redis.zrem('FIREHOSE', auid);
       });
 
       redis.on('message', (channel, message) => {

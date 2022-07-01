@@ -9,7 +9,7 @@ export class Status {
   txt?: string;
 
   @Property({ type: ArrayType, default: [] })
-  lnks?: string[] = [];
+  assets?: string[] = [];
 
   @Property()
   uid!: string;

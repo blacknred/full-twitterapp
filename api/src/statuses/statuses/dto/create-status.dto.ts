@@ -24,9 +24,9 @@ export class CreateStatusDto {
   })
   @IsOptional()
   @IsArray({ message: 'Must be an array' })
-  @ArrayMaxSize(4)
-  @IsString({ message: 'Must includes a strings', each: true })
-  links?: string[];
+  @ArrayMaxSize(4, { message: 'Must includes 4 assets at max' })
+  @IsString({ message: 'Must includes an url strings', each: true })
+  assets?: string[];
 
   @ApiProperty({ type: 'number', required: false })
   @IsOptional()

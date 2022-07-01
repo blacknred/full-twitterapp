@@ -3,7 +3,7 @@ import type { User } from '../../../users/users/types/user.type';
 export type Status = {
   id: number;
   text?: string;
-  links?: string[];
+  assets?: string[];
   createdAt: string;
   author: User;
   status?: Status;

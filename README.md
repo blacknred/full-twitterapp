@@ -4,16 +4,17 @@ Monolith boilerplate for Twitter type social network app
 
 ## Architecture
 
-| Services    | Container  | Stack                  | Ports |
-| ----------- | ---------- | ---------------------- | ----- |
-| Cache       | redis      | Redis                  | 6379  |
-| DB          | postgres\* | Postgres               | 5432  |
-| Queue       | rabbitmq   | RabbitMQ               | 5672  |
-| API service | api        | TS, NestJS, Http, REST | 8080  |
-| Web client  | web        | TS, React, Tailwind    | 3000  |
+| Services    | Container | Stack                  | Ports |
+| ----------- | --------- | ---------------------- | ----- |
+| Cache       | redis     | Redis                  | 6379  |
+| DB          | postgres  | Postgres               | 5432  |
+| Queue       | rabbitmq  | RabbitMQ               | 5672  |
+| API service | api       | TS, NestJS, Http, REST | 8080  |
+| Web client  | web       | TS, React, Tailwind    | 3000  |
 
 - while microservices may be more convinient for such app, the monolith is an intention simplification
-- \*for real world scenario you definitely need an easy sharding nosql db
+- for a real world scenario you definitely need an easily sharded nosql db instead of rdbms
+- this app is designed to be optimized for reading performance
 
 ## Run the project
 
@@ -53,15 +54,15 @@ Monolith boilerplate for Twitter type social network app
 
 - **CACHE + DB**
 
-  - `USER:id`(many*reads, http_cache, \_USER:ID({id,us,nm,img,ts,tss,tfr,tfg}), DELETEDUSERS(uid)*)
+  - `USER:id`(many-reads, http-cache, _USER:ID({id,us,nm,img,ts,tss,tfr,tfg}), DELETEDUSERS(uid)_)
 
     - user data are splitted by frequency of use
-      - cache layer is many_reads_writes: USER:ID({id,us,nm,img,ts,tss,tfr,tfg})
+      - cache layer is many-reads-writes: USER:ID({id,us,nm,img,ts,tss,tfr,tfg})
       - db layer is used only for auth, user mutations and seldom queries: User{id,bio,email,password}
 
-  - `STATUS:id`(many*reads, slow_writes, \_STATUS:ID({id,txt,lnks,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)*
+  - `STATUS:id`(many-reads, slow-writes, _STATUS:ID({id,txt,ass,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)_
 
-    - statuses are splitted by relevance(statuses are very related to current events, we only need a fast_reads for the recent ones)
+    - statuses are splitted by relevance(statuses are very related to current events, we only need a fast\*reads for the recent ones)
       - cache layer: all new statuses
       - db layer: statuses older than 30d are removed from cache and archived to the cold db with batch inserts
         - writing to db at first lacks in terms of performance: enlarges creation time, separates inserts, includes deleted during 30d statuses
@@ -71,7 +72,9 @@ Monolith boilerplate for Twitter type social network app
       - to handle it we use async queue with fanout updates. Every queue task will update feed for the next 1000 followers
       - most users have less than 1k followers and will get updates at one task
 
-- **CACHE ONLY**(temp/many_reads_writes)
+- **CACHE ONLY**(temp/many-reads-writes)
+
+  - `FIREHOSE`(temp, _FIREHOSE(uid)_)
 
   - `TRENDS`(=100, temp(24h), _LASTTAGS(tag), TRENDS(tag)_)
 
@@ -82,7 +85,7 @@ Monolith boilerplate for Twitter type social network app
       - update _trends_ according with _lasttags_
     - get trends by score
 
-  - `RECOMMENDATIONS:uid`(<1000, temp, many*writes, http_cache, \_RECOMMENDATIONS:UID(uid)*)
+  - `RECOMMENDATIONS:uid`(<1000, temp, many-writes, http-cache, _RECOMMENDATIONS:UID(uid)_)
 
     1. users I watch/liked/reposted/replied the most that are not on my blocklist
     2. top 50 recommendations of user I have started following that are not on my blocklist
@@ -91,28 +94,28 @@ Monolith boilerplate for Twitter type social network app
     - most likely all these recommendations will be mutual followings and this is ok
     - the more i active the more recommendations i have
 
-  - `FOLLOWERS|FOLLOWING:uid`(many*reads, http_cache, \_FOLLOWERS:UID(uid), FOLLOWING:UID(uid)*)
+  - `FOLLOWERS|FOLLOWING:uid`(many-reads, http-cache, _FOLLOWERS:UID(uid), FOLLOWING:UID(uid)_)
 
-  - `LIKES:uid|sid`(many*reads_writes, \_LIKES:USER:UID(sid), LIKES:STATUS:SID(uid)*)
+  - `LIKES:uid|sid`(many-reads-writes, _LIKES:USER:UID(sid), LIKES:STATUS:SID(uid)_)
 
-  - `BLOCKLIST:uid`(many*reads, \_BLOCKLIST:UID(uid)*)
+  - `BLOCKLIST:uid`(many-reads, _BLOCKLIST:UID(uid)_)
 
-  - `FEED:uid`(<1000, temp, many*reads_writes, \_FEED:UID(statusevent)*)
+  - `FEED:uid`(<1000, temp, many-reads-writes, _FEED:UID(statusevent)_)
 
     - following activity
       - reposts/replies/likes of my following
       - top statuses of following feeds
     - _with every new statuses only first 1k followers get feeds updates, the rest are processed async by rabbitmq_
 
-  - `NOTIFICATIONS:uid`(<1000, temp, many*reads_writes, \_NOTIFICATIONS:UID(statusevent)*)
+  - `NOTIFICATIONS:uid`(<1000, temp, many-reads-writes, _NOTIFICATIONS:UID(statusevent)_)
 
     - me related activity
       - my @mentions
       - reposts/replies/likes of my statuses
 
-- **DB ONLY**(few_reads_writes, non_client_app)
+- **DB ONLY**(few-reads-writes, non-client-app)
 
-  - `REPORTS`(few*reads_writes, admin_only, \_REPORT({id,iud,sid?,reason,createdAt})*)
+  - `REPORTS`(few-reads-writes, admin-only, _REPORT({id,iud,sid?,reason,createdAt})_)
 
 ### Api
 
@@ -130,7 +133,7 @@ Monolith boilerplate for Twitter type social network app
 
 - **users**
 
-  - \*[users]
+  - #[users]
 
     - create({ username,email,name })
       - `if (hget(`USERSLOOKUP`, username) || hget(`USERSLOOKUP`, email)) return 409` _username or email in use_
@@ -186,7 +189,7 @@ Monolith boilerplate for Twitter type social network app
       - `zadd(`DELETEDUSERS`, auid, timestamp)`
       - `return null`
 
-  - \*[subscriptions]
+  - #[subscriptions]
 
     - create({ auid,uid })
       - `if (!exists(`USER:UID`)) return 409` _no such user_
@@ -196,19 +199,19 @@ Monolith boilerplate for Twitter type social network app
       - `pp.zadd(`FOLLOWERS:UID`, auid, timestamp)`
       - `pp.hincrby(`USER:AUID`, totalFollowing, 1)`
       - `pp.hincrby(`USER:UID`, totalFollowers, 1)`
-      - ##drop_from_recommendations##
+      - ##drop*from*recommendations##
       - `if (pp.zscore(`RECOMMENDATIONS:AUID`, uid)`
         - `pp.zrem(`RECOMMENDATIONS:AUID`, uid)`
-      - ##drop_from_blocklist##
+      - ##drop*from*blocklist##
       - `if (pp.zscore(`BLOCKLIST:AUID`, uid)`
         - `pp.zrem(`BLOCKLIST:AUID`, uid)`
-      - ##get_following_statuses##
+      - ##get*following*statuses##
       - `pp.zrevrange(`STATUSES:USER:UID`, 0, 100, withscores)
       - `statuses = pp.execute()[-1]`
       - `pp.zadd(`FEED:AUID`, ...statuses)`
       - `pp.zremrangebyrank(`FEED:AUID`, 0, 1000)`
       - `pp.execute()`
-      - ##get_top_recommendations_of_following##
+      - ##get*top*recommendations*of*following##
       - `uids = zrange(`RECOMMENDATIONS:AUID`, cursor -1 REV BYSCORE LIMIT 0 50)`
       - `for uid in uids`
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
@@ -238,7 +241,7 @@ Monolith boilerplate for Twitter type social network app
       - `pp.zrem(`FEED:AUID`, ...statuses)`
       - `return null`
 
-  - \*[blocks]
+  - #[blocks]
 
     - create({ auid, uid })
       - `if (!exists(`USER:UID`)) return 409` _no such user_
@@ -263,7 +266,7 @@ Monolith boilerplate for Twitter type social network app
       - `zrem(`BLOCKLIST:AUID`, uid)`
       - `return null`
 
-  - \*[reports]
+  - #[reports]
     - create(auid, { uid, sid?, reason? })
       - `if (!exists(`USER:UID`)) return 409` _no such user_
       - `if (sid && !(exists(`STATUS:SID`))) return 409` _no such status_
@@ -275,20 +278,19 @@ Monolith boilerplate for Twitter type social network app
   - [statuses]
 
     - _findRelation_()
-    - \_
-    - create(auid, data:{sid, text, media})
+    - create(auid, data:{sid, text, assets})
       - `id = incr('status:id:')`
-      - `pp.hmset(`STATUS:ID`, ...{id,uid,sid,text,media,createdAt,totalLikes:0,totalRetweets:0,totalReplies:0})`
+      - `pp.hmset(`STATUS:ID`, ...{id,uid,sid,text,assets,createdAt,totalLikes:0,totalRetweets:0,totalReplies:0})`
       - `pp.hincrby(`USER:AUID`, 'totalStatuses', 1)`
       - `pp.zadd(`STATUSES:USER:AUID`, id, createdAt)`
       - ##repost/reply##
       - `if (sid)`
-        - `if (text || media)`
+        - `if (text || assets)`
           - ? `pp.hincrby(`STATUS:SID`, 'totalReplies', 1)`
           - ? `pp.zadd(`REPLIES:SID`, id, timestamp)`
           - : `pp.hincrby(`STATUS:SID`, 'totalReposts', 1)`
           - : `pp.zadd(`REPOSTS:SID`, id, timestamp)`
-        - ##recommed_author_of_origin_status##
+        - ##recommed-author-of-origin-status##
         -
         - `if (!(pp.zscore(`FOLLOWING:AUID`, uid)))`
           - `if (!pp.zscore(`BLOCKLIST:AUID`, uid))`
@@ -306,7 +308,7 @@ Monolith boilerplate for Twitter type social network app
       - ##mentions##
       - `for @mention in text`
         - =>>>>>>>>>>>>>> notifications
-      - ##followers_feeds##
+      - ##followers-feeds##
       - `subs`
       - `pp.execute()`
       - `pp.publish('streaming:status:', JSON.stringify(status))`
@@ -336,7 +338,7 @@ Monolith boilerplate for Twitter type social network app
       - `pp.execute()`
       - `return null`
 
-  - \*[likes]
+  - #[likes]
 
     - create(auid, sid)
       - `if (!(exists(`STATUS:SID`))) return 409`
@@ -382,7 +384,7 @@ Monolith boilerplate for Twitter type social network app
       - `pp.execute()`
       - `return null`
 
-  - \*[trends]
+  - #[trends]
 
     - _trendsMapping(arr: unknown[])_
       - const results = []
@@ -407,19 +409,18 @@ Monolith boilerplate for Twitter type social network app
 
 - **firehose**
 
-  sse(on home page)
-  statusEvent stream for feed, notifications, search
+  sse statusEvent stream is filtered by SampleFilter, MentionFilter, TrackFilter
 
 ### TODO
 
 - Rabbit
-  - schedulling(rabbitmq_delayed_message_exchange):
+  - schedulling(rabbitmq-delayed-message-exchange):
     - every day statuses older than 30d go to cold db with bulk inserts
     - every day user hard deleting
       - `userstodelete = zrange(`DELETEDUSERS`, now, -1 REV BYSCORE)`
       - `for uid in userstodelete pp.hrem(`USER:UID`)`
       - ...rest zrem
-      - pg version: SELECT \* FROM users WHERE deleted_at > NOW() - interval '3 month'
+      - pg version: SELECT # FROM users WHERE deletedAt > NOW() - interval '3 month'
     - every hour trends filter:
       - `pp.zremrangebyscore(`LASTTAGS`, '-inf', now - dayinsec)//cut older than 24h`
       - `pp.zinterscore(`TRENDS`, 2, lasttags, trends)//only lasttags in trends`
@@ -430,8 +431,11 @@ Monolith boilerplate for Twitter type social network app
   - Termius custom health indicators for redis, rabbit
   - Prometheus redis & rabbitmq stats
 - Redis
-  - geospatial - feed local statuses at first?
-  - Search API?
+  - geospatial - feeds/trends localization
+  - text field Search API
+  - the text and assets(media links) fields of the Status entity combined can easily contain more than 500 chars
+    - the idea is to consider the text field as an asset and store them out of redis
+    - client will download text the same way it downloads the assets per Status(loading=lazy optimisation)
 - Implement feed graph
 
 <!-- StatusEvent{type:'posting'|'repost'|'reply' |'like'|'mention'|'RECOMMENDATIONS', from:Partial<User>, status:Partial<Status>}

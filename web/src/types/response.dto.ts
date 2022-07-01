@@ -1,7 +1,6 @@
-export type BaseResponseDto<T = unknown> = {
-  message?: string
-  errors?: ValidationErrorDto[]
-  data?: T
+export type ValidationErrorDto = {
+  field: string
+  message: string
 }
 
 export type PaginatedDataDto<T> = {
@@ -10,7 +9,12 @@ export type PaginatedDataDto<T> = {
   items: T[]
 }
 
-export type ValidationErrorDto = {
-  field: string
-  message: string
+export type BaseResponseDto<T = unknown> = {
+  message?: string
+  errors?: ValidationErrorDto[]
+  data?: T
 }
+
+export type EmptyResponseDto = BaseResponseDto<null>
+
+export type PaginatedResponseDto<T> = BaseResponseDto<PaginatedDataDto<T>>

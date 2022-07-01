@@ -1,14 +1,14 @@
-import { BaseEntity } from './base.entity'
-
-export type SortingDto<T extends BaseEntity> = {
-  'sort.field': keyof T
-  'sort.order': 'ASC' | 'DESC'
+export type SortingDto = {
+  order: 'ASC' | 'DESC'
 }
 
-export type KeysetPaginationDto<T extends BaseEntity> = Partial<
-  Omit<T, keyof BaseEntity>
-> &
-  SortingDto<T> & {
-    limit: number
-    cursor: string
-  }
+export type KeysetPaginationDto = {
+  limit: number
+  createdAt: number
+}
+
+export type PaginatedRequestDto = SortingDto & KeysetPaginationDto
+
+// pagination: createdAt=20045455, limit=20
+// sort: order=ASC|DESC
+// filters: uid?, sid?

@@ -21,6 +21,9 @@ export class PaginatedDataDto<T> {
 }
 
 export class BaseResponseDto<T = unknown> implements BaseResponse {
+  @ApiProperty({ type: 'string', required: false })
+  message?: string;
+
   @ApiProperty({
     type: ValidationErrorDto,
     isArray: true,
@@ -30,14 +33,9 @@ export class BaseResponseDto<T = unknown> implements BaseResponse {
 
   @ApiProperty({ required: false })
   data?: T;
-
-  @ApiProperty({ type: 'string', required: false })
-  message?: string;
 }
 
-export class EmptyResponseDto extends BaseResponseDto<null> {
-  data: null;
-}
+export class EmptyResponseDto extends BaseResponseDto<null> {}
 
 export class PaginatedResponseDto<T> extends BaseResponseDto<
   PaginatedDataDto<T>

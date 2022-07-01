@@ -4,7 +4,7 @@ export type ValidationErrorDto = {
 };
 
 export type BaseResponse<T = unknown> = {
+  message?: string;
   errors?: ValidationErrorDto[];
   data?: T;
-  message?: string;
 };

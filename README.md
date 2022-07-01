@@ -12,7 +12,7 @@ Monolith boilerplate for Twitter type social network app
 | API service | api       | TS, NestJS, Http, REST | 8080  |
 | Web client  | web       | TS, React, Tailwind    | 3000  |
 
-- while microservices may be more convinient for such app, the monolith is an intention simplification
+- while microservices may be more convenient for such an application, a monolith is an intentional simplification
 - for a real world scenario you definitely need an easily sharded nosql db instead of rdbms
 - this app is designed to be optimized for reading performance
 

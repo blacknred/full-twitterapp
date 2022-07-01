@@ -4,9 +4,9 @@ import { Outlet, useRoutes } from 'react-router-dom';
 import { MainLayout } from '@/components/Layout';
 import { useAuth } from '@/features/auth';
 
-const AuthRoutes = lazy(() => import('../../../../__SANDBOX__/web/src/features/auth/routes'));
-const UserRoutes = lazy(() => import('../../../../__SANDBOX__/web/src/features/users/routes'));
-const TweetsRoutes = lazy(() => import('../../../../__SANDBOX__/web/src/features/tweets/routes'));
+const AuthRoutes = lazy(() => import('../../../../__SANDBOX__/features/auth/routes'));
+const UserRoutes = lazy(() => import('../../../../__SANDBOX__/features/users/routes'));
+const TweetsRoutes = lazy(() => import('../../../../__SANDBOX__/features/tweets/routes'));
 
 export const AppRoutes = () => {
   const { isValidating, data: auth } = useAuth();

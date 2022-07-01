@@ -19,7 +19,7 @@ export class KeysetPaginationDto {
   @Min(1)
   limit: number;
 
-  @ApiProperty({ type: 'number', example: 22342423442 })
+  @ApiProperty({ type: 'number', example: 12342423442 })
   @Type(() => Number)
   @IsNumber(null, { message: 'Must be a number' })
   createdAt: number;
@@ -29,7 +29,3 @@ export class PaginatedRequestDto extends IntersectionType(
   KeysetPaginationDto,
   SortingDto,
 ) {}
-
-// pagination: createdAt=20045455, limit=20
-// sort: order=ASC|DESC
-// filters: uid?, sid?

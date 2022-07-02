@@ -6,8 +6,8 @@ Monolith boilerplate for Twitter type social network app
 
 | Services    | Container | Stack                  | Ports |
 | ----------- | --------- | ---------------------- | ----- |
-| Cache       | redis     | Redis                  | 6379  |
-| DB          | postgres  | Postgres               | 5432  |
+| DB          | redis     | Redis stack            | 6379  |
+| Archive     | postgres  | Postgres               | 5432  |
 | Queue       | rabbitmq  | RabbitMQ               | 5672  |
 | API service | api       | TS, NestJS, Http, REST | 8080  |
 | Web client  | web       | TS, React, Tailwind    | 3000  |
@@ -50,6 +50,36 @@ Monolith boilerplate for Twitter type social network app
 
 ## App
 
+`USER`
+- Redis Graph: users with subscriptions & blocks since `subs of my subs` querying
+  User ->(follows)-> User
+  User ->(blocks)-> User
+- Postgres: UserDetails{id,bio,email,password}
+
+`Status`
+- Redis hash, RediSearch: recents(1m)
+  FT.CREATE statusIdx ON HASH PREFIX 1 status: SCHEMA text TEXT WEIGHT 5.0
+  FT.SEARCH statusIdx "hello world" LIMIT 0 10
+- Postgres: older 1m
+
+`Reports`
+- Postgres
+
+`Analytics`
+
+
+
+
+User ->(posts)-> Status
+User ->(liked)-> Status
+
+Status ->(reposts)-> Status
+Status ->(reply)-> Status
+Status ->(liked)-> User
+Status ->(mentions)-> User
+Status ->(tags)-> User
+
+
 ### Features
 
 - **CACHE + DB**
@@ -58,7 +88,7 @@ Monolith boilerplate for Twitter type social network app
 
     - user data are splitted by frequency of use
       - cache layer is many-reads-writes: USER:ID({id,us,nm,img,ts,tss,tfr,tfg})
-      - db layer is used only for auth, user mutations and seldom queries: User{id,bio,email,password}
+      - db layer is used only for auth, user mutations and seldom queries: UserDetails{id,bio,email,password}
 
   - `STATUS:id`(many-reads, slow-writes, _STATUS:ID({id,txt,ass,uid,sid?,ts,tlk,trp,trl}), STATUSES:USER:UID(sid), STATUSES:TAG:TAG(sid), REPLIES:SID(sid), REPOSTS:SID(sid)_
 
@@ -95,10 +125,13 @@ Monolith boilerplate for Twitter type social network app
     - the more i active the more recommendations i have
 
   - `FOLLOWERS|FOLLOWING:uid`(many-reads, http-cache, _FOLLOWERS:UID(uid), FOLLOWING:UID(uid)_)
+  - `BLOCKLIST:uid`(many-reads, _BLOCKLIST:UID(uid)_)
+
+
 
   - `LIKES:uid|sid`(many-reads-writes, _LIKES:USER:UID(sid), LIKES:STATUS:SID(uid)_)
 
-  - `BLOCKLIST:uid`(many-reads, _BLOCKLIST:UID(uid)_)
+ 
 
   - `FEED:uid`(<1000, temp, many-reads-writes, _FEED:UID(statusevent)_)
 
@@ -431,15 +464,23 @@ Monolith boilerplate for Twitter type social network app
   - Termius custom health indicators for redis, rabbit
   - Prometheus redis & rabbitmq stats
 - Redis
-  - geospatial - feeds/trends localization
-  - text field Search API
+
+  - geospatial - statuses/trends localization
+  - [analitics with Redis TimeSeries](https://www.infoq.com/articles/redis-time-series-grafana-real-time-analytics/)
   - the text and assets(media links) fields of the Status entity combined can easily contain more than 500 chars
     - the idea is to consider the text field as an asset and store them out of redis
+    - maybe blob/clob service
     - client will download text the same way it downloads the assets per Status(loading=lazy optimisation)
-- Implement feed graph
 
 <!-- StatusEvent{type:'posting'|'repost'|'reply' |'like'|'mention'|'RECOMMENDATIONS', from:Partial<User>, status:Partial<Status>}
 FeedEvent{status:Status,extra?:'liked/following by :Follower' }
 feed:uid
 Notification{status:Partial<Status>,event?:{type: 'like/repost/reply/mention', from: Partial<User>}}
 notifications:uid -->
+
+
+<!-- const redis = new Redis();
+redis.defineCommand(`CLMAN_INITSESS`, { lua: "return {KEYS[1]}" });
+redis.CLMAN_INITSESS(1, "hi", console.log); // printed null [ 'hi' ]
+redis.call('set', 'foo', 'bar') or redis.call(['set', 'foo', 'bar'])
+https://github.com/redis/redis-om-node -->

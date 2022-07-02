@@ -1,3 +1,5 @@
-FROM redis:alpine
+FROM redis/redis-stack-server:latest
 
-CMD ["sh", "-c", "exec redis-server --requirepass \"$REDIS_PASSWORD\""]
+ENV REDIS_ARGS "--requirepass test"
+
+# CMD ["sh", "-c", "exec redis-server --requirepass \"$REDIS_PASSWORD\""]

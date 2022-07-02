@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseFilters } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { WithCreatedApi } from 'src/__shared__/decorators/with-api.decorator';
+import { WithAuth } from 'src/__shared__/decorators/with-auth.decorator';
 import { AllExceptionFilter } from 'src/__shared__/filters/all-exception.filter';
 import { CreateReportDto } from './dto/create-report.dto';
 import { ReportResponseDto } from './dto/report-response.dto';
@@ -14,6 +15,7 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post()
+  @WithAuth()
   @WithCreatedApi(ReportResponseDto, 'Create new report')
   async create(
     @Body() createReportDto: CreateReportDto,

@@ -40,10 +40,10 @@ export class BlocksController {
   @WithAuth()
   @WithOkApi(BlocksResponseDto, 'List all blocks of authorized user')
   async getAll(
-    @Auth('user') { id: uid },
+    @Auth() { id },
     @Query() getBlocksDto: GetBlocksDto,
   ): Promise<BlocksResponseDto> {
-    return this.blocksService.findAll(uid, getBlocksDto);
+    return this.blocksService.findAll(id, getBlocksDto);
   }
 
   @Delete()

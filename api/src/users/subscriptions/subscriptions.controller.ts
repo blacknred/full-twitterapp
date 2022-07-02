@@ -42,19 +42,19 @@ export class SubscriptionsController {
   @WithAuth()
   @WithOkApi(SubscriptionsResponseDto, 'List all blocks of authorized user')
   async getAll(
-    @Auth('user') { uid },
+    @Auth() { id },
     @Query() getSubscriptionsDto: GetSubscriptionsDto,
   ): Promise<SubscriptionsResponseDto> {
-    return this.subscriptionsService.findAll(uid, getSubscriptionsDto);
+    return this.subscriptionsService.findAll(id, getSubscriptionsDto);
   }
 
   @Delete()
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete block')
   async remove(
-    @Auth('user') { uid },
+    @Auth() { id },
     @Body() deleteSubscriptionDto: DeleteSubscriptionDto,
   ): Promise<EmptyResponseDto> {
-    return this.subscriptionsService.remove(uid, deleteSubscriptionDto);
+    return this.subscriptionsService.remove(id, deleteSubscriptionDto);
   }
 }

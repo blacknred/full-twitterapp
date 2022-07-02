@@ -43,17 +43,17 @@ export class UsersController {
   @WithAuth()
   @WithOkApi(UsersResponseDto, 'List all users')
   async getAll(
-    @Auth('user') { uid },
+    @Auth() { id },
     @Query() getUsersDto: GetUsersDto,
   ): Promise<UsersResponseDto> {
-    return this.usersService.findAll(uid, getUsersDto);
+    return this.usersService.findAll(id, getUsersDto);
   }
 
   @Get(':id')
   @WithAuth()
   @WithOkApi(UserResponseDto, 'Get user by id')
   async getOne(
-    @Auth('user') { uid },
+    @Auth() { id: uid },
     @Param() { id }: GetUserDto,
   ): Promise<UserResponseDto> {
     return this.usersService.findOne(uid, id);
@@ -63,16 +63,16 @@ export class UsersController {
   @WithAuth()
   @WithOkApi(UserResponseDto, 'Update authorized user')
   async update(
-    @Auth('user') { uid },
+    @Auth() { id },
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    return this.usersService.update(uid, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete()
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete authorized user')
-  async remove(@Auth('user') { uid }): Promise<EmptyResponseDto> {
-    return this.usersService.remove(uid);
+  async remove(@Auth() { id }): Promise<EmptyResponseDto> {
+    return this.usersService.remove(id);
   }
 }

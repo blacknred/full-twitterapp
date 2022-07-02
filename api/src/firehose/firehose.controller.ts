@@ -27,19 +27,18 @@ export class FirehoseController {
   @WithAuth()
   @WithOkApi(null, 'Listen firehose')
   sse(
-    @Auth() { uid },
+    @Auth() { id },
     @Res() res: Response,
     @Query() sseFirehoseDto: SseFirehoseDto,
   ): Observable<MessageEvent> {
-    return this.firehoseService.intercept(res, uid, sseFirehoseDto);
-
-    //   const subject$ = new Subject();
-    //   this.firehoseService.on('status', (data) => {
-    //     // if (sseQuery.email !== data.email) return;
-    //     subject$.next({ isVerifiedFilter: true });
-    //   });
-    //   return subject$.pipe(
-    //     map((data: MessageEventData): MessageEvent => ({ data })),
-    //   );
+    return this.firehoseService.intercept(res, id, sseFirehoseDto);
+    // const subject$ = new Subject();
+    // this.firehoseService.on('status', (data) => {
+    //   // if (sseQuery.email !== data.email) return;
+    //   subject$.next({ isVerifiedFilter: true });
+    // });
+    // return subject$.pipe(
+    //   map((data: MessageEventData): MessageEvent => ({ data })),
+    // );
   }
 }

@@ -1,94 +1,68 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { PassportSerializer, PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-local';
-import { BaseResponse } from 'src/__shared__/types/response.type';
-import { USER_SERVICE } from '../consts';
-import { IAuth } from '../interfaces/auth.interface';
-import { IUser } from '../interfaces/user.interface';
-
-// LocalAuthGuard.logIn(req) => LocalStrategy.validate() => SessionSerialiser.serializeUser()
-
-@Injectable()
-export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @Inject(USER_SERVICE) protected readonly userService: ClientProxy,
-  ) {
-    super({ usernameField: 'email' });
-  }
-
-  async validate(email: string, password: string) {
-    const params = { password, email };
-    const { status, ...rest } = await this.userService
-      .send<BaseResponse<IUser>>('users/getOne', params)
-      .toPromise();
-
-    if (status !== HttpStatus.OK) {
-      throw new HttpException(rest, status);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { createdAt, updatedAt, ...user } = rest.data;
-    return user;
-  }
-}
-
-
-import { Strategy } from 'passport-local';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt } from 'passport-jwt';
+import { Strategy } from 'passport-local';
+import type { Request } from 'express';
+
+import { UsersService } from 'src/users/users/users.service';
+import { Auth } from '../types/auth.type';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(private authService: AuthService) {
-    super();
+  constructor(private userService: UsersService) {
+    super({ usernameField: 'emailOrUsername' });
   }
 
-  async validate(username: string, password: string): Promise<any> {
-    const user = await this.authService.validateUser(username, password);
-    if (!user) {
-      throw new UnauthorizedException();
-    }
+  async validate(emailOrUsername: string, password: string): Promise<any> {
+    const params = { password, emailOrUsername };
+    const user = await this.userService.findValidatedOne(params);
+
+    if (!user) throw new UnauthorizedException();
     return user;
   }
 }
-
-
-// @Injectable()
-// export class SessionSerializer extends PassportSerializer {
-//   serializeUser(
-//     user: Partial<IUser>,
-//     done: (err: Error, payload: IAuth) => void,
-//   ) {
-//     done(null, { user, pushSubscriptions: [] });
-//   }
-
-//   deserializeUser(payload: IAuth, done: (err: Error, user: IAuth) => void) {
-//     done(null, payload);
-//   }
-// }
-
-
-
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService) {
+  constructor(configService: ConfigService, private authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => req?.cookies?.Authentication,
+      ]),
+      secretOrKey: configService.get('SECRET'),
       ignoreExpiration: false,
+      passReqToCallback: true,
+    });
+  }
+
+  async validate(request: Request, payload: Auth) {
+    if (this.authService.isBlocked(payload.id)) {
+      throw new UnauthorizedException();
+    }
+    return payload;
+  }
+}
+
+@Injectable()
+export class JwtRefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh-token',
+) {
+  constructor(configService: ConfigService, private userService: UsersService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => req?.cookies?.Refresh,
+      ]),
       secretOrKey: configService.get('SECRET'),
     });
   }
 
-  async validate(payload: any) {
-    return { userId: payload.sub, username: payload.username };
+  async validate(payload: Auth) {
+    return this.userService.findOne(payload.id);
   }
 }
 
-export default [LocalStrategy];
+export default [LocalStrategy, JwtStrategy];

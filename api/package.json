@@ -23,9 +23,9 @@
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
-    "@mikro-orm/core": "^4.5.9",
-    "@mikro-orm/mongodb": "^4.5.9",
+    "@mikro-orm/core": "^5.2.1",
     "@mikro-orm/nestjs": "^4.3.1",
+    "@mikro-orm/postgresql": "^5.2.1",
     "@nestjs/common": "^8.0.6",
     "@nestjs/config": "^1.0.1",
     "@nestjs/core": "^8.0.6",
@@ -45,6 +45,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "prom-client": "^14.0.0",
+    "redis-om": "0.1.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.3.0",
     "swagger-ui-express": "^4.1.6"

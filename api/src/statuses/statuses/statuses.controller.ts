@@ -53,10 +53,8 @@ export class StatusesController {
   @WithAuth()
   @WithOkApi(StatusesResponseDto, 'List all statuses')
   async getAll(
-    @Auth('user') { isAdmin },
     @Query() getStatusesDto: GetStatusesDto,
   ): Promise<StatusesResponseDto> {
-    // if (!isAdmin) getStatusesDto.trended = true;
     return this.statusesService.findAll(getStatusesDto);
   }
 
@@ -71,7 +69,7 @@ export class StatusesController {
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete status')
   async remove(
-    @Auth('user') { id: uid },
+    @Auth() { id: uid },
     @Param() { id }: DeleteStatusDto,
   ): Promise<EmptyResponseDto> {
     return this.statusesService.remove(uid, id);

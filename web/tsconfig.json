@@ -20,7 +20,7 @@
     "outDir": "./dist/",
     "noImplicitReturns": true,
   },
-  "include": ["src", "cypress", "tailwind.config.js", "../../__SANDBOX__/react/2-advanced-examples", "../../__SANDBOX__/features"],
+  "include": ["src", "cypress", "tailwind.config.js", "../../__SANDBOX__/react/2-advanced-examples", "src/features"],
   "exclude": ["node_modules"],
   "extends": "./tsconfig.paths.json"
 }

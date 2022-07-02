@@ -11,7 +11,7 @@ import { useDarkMode } from '@/hooks/useDarkMode';
 import { Avatar, Link, Spinner } from '../Elements';
 import { Auth, useAuth } from '@/features/auth';
 import { data } from 'cypress/types/jquery';
-import { TrendList } from '@/features/tweets/components/TrendList';
+import { TrendList } from '@/features/statuses/components/TrendList';
 import { RecommendationList } from '@/features/users/components/RecommendationListList';
 
 

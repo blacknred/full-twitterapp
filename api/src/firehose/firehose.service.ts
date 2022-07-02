@@ -11,7 +11,7 @@ import { SseFirehoseDto } from './dto/sse-firehose.dto';
 @Injectable()
 export class FirehoseService {
   private readonly logger = new Logger(FirehoseService.name);
-  rate = 0.8;
+  rate = 0.5;
 
   constructor(private readonly redisService: RedisService) {
     const redis = this.redisService.getClient('statuses');
@@ -24,24 +24,26 @@ export class FirehoseService {
 
   overrate(it: number) {
     this.rate = it / 60;
+    it = 0;
   }
 
   intercept(res: Response, auid: number, dto: SseFirehoseDto) {
     return new Observable<MessageEvent>((subscriber) => {
-      const redis = this.redisService.getClient('statuses');
+      const redis = this.redisService.getClient('statuses').duplicate();
 
       redis.zadd('FIREHOSE', auid, Date.now());
       redis.subscribe([STATUS_EVENT_STREAM]);
 
       res.on('close', () => {
         redis.unsubscribe();
+        subscriber.complete();
         redis.zrem('FIREHOSE', auid);
       });
 
       redis.on('message', (channel, message) => {
         const { status } = JSON.parse(message) as StatusEvent;
 
-        if (this.passedFilter(dto, status)) {
+        if (this.match(dto, status)) {
           subscriber.next({
             data: status,
             id: Date.now().toString(),
@@ -51,14 +53,14 @@ export class FirehoseService {
     });
   }
 
-  passedFilter(args: SseFirehoseDto, status: Status) {
+  match(args: SseFirehoseDto, status: Status) {
     switch (args.filter) {
       case 'track':
         return this.trackFilter(status, args.q);
       case 'mention':
         return this.mentionFilter(status, args.uid);
       default:
-        return this.sampleFilter;
+        return this.sampleFilter();
     }
   }
 

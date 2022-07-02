@@ -75,12 +75,14 @@ export class UsersService {
     // };
   }
 
-  async findOne(id: number, withDeleted?: boolean) {
+  async findOne(id: number) {
     // const params = withDeleted ? id : { id, deletedAt: null };
     // const data = await this.userRepository.findOne(params);
     // if (!data) throw new NotFoundException();
     // return { data };
   }
+
+  async findValidatedOne(id: number) {}
 
   async update(auid: number, updateUserDto: UpdateUserDto) {
     const cache = this.redisService.getClient('users');
@@ -131,4 +133,25 @@ export class UsersService {
 
     return { data: null };
   }
+
+   // public async getAuthenticatedUser(email: string, plainTextPassword: string) {
+  //   try {
+  //     const user = await this.usersService.getByEmail(email);
+  //     await this.verifyPassword(plainTextPassword, user.password);
+  //     user.password = undefined;
+  //     return user;
+  //   } catch (error) {
+  //     throw new HttpException('Wrong credentials provided', HttpStatus.BAD_REQUEST);
+  //   }
+  // }
+
+  // private async verifyPassword(plainTextPassword: string, hashedPassword: string) {
+  //   const isPasswordMatching = await bcrypt.compare(
+  //     plainTextPassword,
+  //     hashedPassword
+  //   );
+  //   if (!isPasswordMatching) {
+  //     throw new HttpException('Wrong credentials provided', HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 }

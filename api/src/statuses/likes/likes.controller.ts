@@ -47,7 +47,7 @@ export class LikesController {
   @WithAuth()
   @WithOkApi(EmptyResponseDto, 'Delete like')
   async remove(
-    @Auth('user') { id },
+    @Auth() { id },
     @Body() deleteLikeDto: DeleteLikeDto,
   ): Promise<EmptyResponseDto> {
     return this.likesService.remove(id, deleteLikeDto);

@@ -1,0 +1,1 @@
+export const Trend = () => <p>TREND BLOCK</p>

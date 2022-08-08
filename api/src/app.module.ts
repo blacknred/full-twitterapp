@@ -6,7 +6,7 @@ import { AmqpModule } from 'nestjs-amqp';
 import { RedisModule } from 'nestjs-redis';
 
 import { AuthModule } from './auth/auth.module';
-import { FirehoseModule } from './firehose/firehose.module';
+import { FirehoseModule } from './statuses/firehose/firehose.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { StatusesModule } from './statuses/statuses.module';
 import { UsersModule } from './users/users.module';

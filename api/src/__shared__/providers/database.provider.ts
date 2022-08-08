@@ -8,7 +8,7 @@ export const databaseProvider: MikroOrmModuleAsyncOptions = {
     clientUrl: configService.get('POSTGRES_URL'),
     debug: configService.get('NODE_ENV') === 'development',
     autoLoadEntities: true,
-    flushMode: 'COMMIT',
+    flushMode: 1,
     ensureIndexes: true,
     type: 'postgresql',
   }),

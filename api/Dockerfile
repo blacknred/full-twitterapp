@@ -13,10 +13,13 @@ RUN curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /usr/src/app
-# USER node
+# Don't run production as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 server
+USER server
 COPY package*.json yarn.lock ./
 RUN yarn install --production=true --frozen-lockfile && yarn cache clean
 RUN /usr/local/bin/node-prune
 COPY . .
-COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build --chown=server:nodejs /usr/src/app/dist ./dist
 CMD ["node", "dist/main"]

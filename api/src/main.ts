@@ -1,8 +1,7 @@
 import { ClassSerializerInterceptor } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
 
 import { AppModule } from './app.module';
@@ -11,16 +10,10 @@ import { ValidationPipe } from './__shared__/pipes/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
   app.setGlobalPrefix(API_PREFIX);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-
-  app.enableCors({
-    origin: configService.get('CLIENT_ORIGIN'),
-    credentials: true,
-  });
 
   app.use(cookieParser());
   app.use(json({ limit: '1mb' }));

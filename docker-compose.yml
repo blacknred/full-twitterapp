@@ -1,0 +1,135 @@
+version: "3.7"
+
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    build: ./rabbitmq
+    env_file: ./.env
+    restart: always
+    volumes:
+      - "./rabbitmq/data:/var/lib/rabbitmq"
+    environment:
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+    healthcheck:
+      test: exit 0
+
+  redis:
+    container_name: redis
+    build: ./redis
+    env_file: ./.env
+    restart: always
+    volumes:
+      - "./redis/data:/data"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    networks:
+      - backend
+    healthcheck:
+      test: exit 0
+
+  mongodb:
+    container_name: mongodb
+    build: ./mongodb
+    env_file: ./.env.dev
+    restart: always
+    volumes:
+      - "./mongodb/data:/data/db"
+    environment:
+      - AUTH=yes
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_DB=${MONGO_DB}
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+    healthcheck:
+      test: exit 0
+
+  api:
+    container_name: api
+    hostname: api
+    env_file: ./.env
+    restart: always
+    build:
+      context: ./api
+      target: production
+    volumes:
+      - "./api:/usr/src/app"
+      - "/usr/src/app/node_modules"
+      - "/usr/src/app/dist"
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - MONGODB_URL=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@db:27017/${MONGO_DB}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    depends_on:
+      - redis
+      - mongodb
+      - rabbitmq
+    ports:
+      - "8080:3000"
+    networks:
+      - backend
+
+  # web:
+  #   container_name: web
+  #   hostname: web
+  #   command: yarn dev
+  #   env_file: ./.env
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./web
+  #     target: production
+  #   volumes:
+  #     - "./web:/usr/src/app"
+  #   environment:
+  #     - NODE_OPTIONS=--openssl-legacy-provider
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - frontend
+
+  proxy:
+    container_name: proxy
+    hostname: proxy
+    build: ./nginx
+    env_file: ./.env
+    restart: always
+    volumes:
+      - "./nginx/etc/ssl:/etc/nginx/ssl"
+      - "./nginx/etc/service.conf:/etc/nginx/service.conf"
+    environment:
+      - TZ=${TZ}
+      - LETSENCRYPT=true
+      - LE_FQDN=${SSL_DOMAIN}
+      - LE_EMAIL=${SSL_EMAIL}
+    depends_on:
+      - api
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - backend
+      - frontend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    name: infrastructure

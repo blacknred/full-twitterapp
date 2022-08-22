@@ -20,8 +20,7 @@ import { redisProvider } from './__shared__/providers/redis.provider';
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().required(),
         SECRET: Joi.string().required(),
-        CLIENT_ORIGIN: Joi.string().required(),
-        POSTGRES_URL: Joi.string().required(),
+        MONGODB_URL: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
         RABBITMQ_URL: Joi.string().required(),
         SMTP_URL: Joi.string().required(),

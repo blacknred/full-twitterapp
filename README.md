@@ -4,17 +4,17 @@ Monolith boilerplate for Twitter type social network app
 
 ## Architecture
 
-| Services    | Container | Stack                  | Ports |
-| ----------- | --------- | ---------------------- | ----- |
-| DB          | redis     | Redis stack            | 6379  |
-| Archive     | postgres  | Postgres               | 5432  |
-| Queue       | rabbitmq  | RabbitMQ               | 5672  |
-| API service | api       | TS, NestJS, Http, REST | 8080  |
-| Web client  | web       | TS, React, Tailwind    | 3000  |
+| Services    | Container | Stack                     | Ports  |
+| ----------- | --------- | ------------------------- | ------ |
+| Hot DB      | redis     | Redis stack               | 6379   |
+| Cold DB     | mongo     | MongoDB                   | 27017  |
+| Queue       | rabbitmq  | RabbitMQ                  | 5672   |
+| API         | api       | TS, NestJs, REST, Swagger | 8080   |
+| Dev Web     | web       | TS, NextJs, Tailwind      | 3000   |
+| Proxy       | nginx     | Nginx                     | 80/443 |
 
-- while microservices may be more convenient for such an application, a monolith is an intentional simplification
-- for a real world scenario you definitely need an easily sharded nosql db instead of rdbms
 - this app is designed to be optimized for reading performance
+- while microservices may be more convenient for such an application, a monolith is an intentional simplification
 
 ## Run the project
 

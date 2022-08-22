@@ -7,9 +7,9 @@ import { Report } from 'src/users/reports/entities/report.entity';
 const configService = new ConfigService();
 
 const MikroOrmConfig: Options = {
-  clientUrl: configService.get('POSTGRES_URL'),
+  clientUrl: configService.get('MONGODB_URL'),
   entities: [Report],
-  type: 'postgresql',
+  type: 'mongo',
 };
 
 export default MikroOrmConfig;

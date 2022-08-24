@@ -11,7 +11,7 @@ Monolith boilerplate for Twitter type social network app
 | Queue       | rabbitmq  | RabbitMQ                  | 5672   |
 | API         | api       | TS, NestJs, REST, Swagger | 8080   |
 | Dev Web     | web       | TS, NextJs, Tailwind      | 3000   |
-| Proxy       | nginx     | Nginx                     | 80/443 |
+| Proxy       | nginx     | Nginx, FE                 | 80/443 |
 
 - this app is designed to be optimized for reading performance
 - while microservices may be more convenient for such an application, a monolith is an intentional simplification

@@ -43,7 +43,7 @@ export class User {
   // utils
 
   *next() {
-    const names = ['id', 'un', 'fm', 'img', 'ts', 'tss', 'tfr', 'tfg'];
+    const names = ['id', 'un', 'fn', 'img', 'ts', 'tss', 'tfr', 'tfg'];
     yield* names.reduce((all, n) => all.concat(n, this[n]), []);
   }
 
@@ -67,7 +67,7 @@ export class User {
       totalStatuses: user.tss,
 
       //   relation?: {
-      //     blockned: boolean;
+      //     blocked: boolean;
       //     followed: boolean;
       //     totalInterFollowing: number;
       //   };

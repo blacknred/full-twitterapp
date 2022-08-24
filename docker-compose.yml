@@ -84,7 +84,6 @@ services:
   # web:
   #   container_name: web
   #   hostname: web
-  #   command: yarn dev
   #   env_file: ./.env
   #   restart: unless-stopped
   #   build:

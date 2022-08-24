@@ -1,5 +1,5 @@
-# FROM mvertes/alpine-mongo
-# FROM clutteredcode/mongo-alpine
+#mvertes/alpine-mongo
+#clutteredcode/mongo-alpine
 #bitnami/mongodb
 #deenoize/mongodb-backup-s3
 #requilence/mongodb-backup
